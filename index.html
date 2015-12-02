@@ -1,0 +1,210 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+	<title>NEMO</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+	<meta http-equiv="content-type" content="text/html; charset=utf-8"/>
+	<link href='fonts/roboto.css' rel='stylesheet' type='text/css'>
+	<link rel="stylesheet" type="text/css" href="css/font-awesome.min.css">
+	<link rel="stylesheet" type="text/css" href="css/style.css">
+</head>
+<body>
+	<div class="page splash activePage">
+		<div class="waiting">
+			<i class="fa fa-spinner fa-pulse"></i>
+		</div>
+	</div>
+	<div class="page login">
+		<div class="logo">
+			<img src="img/lock.png">
+		</div>		
+		<form>
+			<div class="alert hidden"></div>
+			<input type="text" id="username" placeholder="Mã người dùng" value="P20043">
+			<input type="password" id="password" placeholder="Mật khẩu" value="1234.5678">			
+			<button class="btn btn-primary btn-full-width" id="btnLogin">ĐĂNG NHẬP</button>
+		</form>
+	</div><!-- END PAGE LOGIN -->
+	
+	<div class="page home">
+		<nav class="top-nav">
+			<div class="btn-half username">Nguyen Van An</div>
+			<div class="btn-half logout"><a id="btnLogout">Đăng xuất</a></div>
+		</nav>
+		<div class="container">
+			<h5>Chọn màn hình:</h5>
+			<div id="btnAddUser" class="btnBig">
+				<div class="overlay"></div>
+				<div class="btn-text">Thêm Khách Hàng</div>
+			</div>
+			<div id="btnInventory" class="btnBig">
+				<div class="overlay"></div>
+				<div class="btn-text">Thống Kê Tồn Kho</div>
+			</div>
+			<div id="btnSellout" class="btnBig">
+				<div class="overlay"></div>
+				<div class="btn-text">Thống Kê Doanh Số</div>
+			</div>
+			<div id="btnClientData" class="btnBig">
+				<div class="overlay"></div>
+				<div class="btn-text">Dữ liệu chưa đồng bộ</div>
+			</div>
+		</div>
+		<div class="footer">
+			<div class="btn btn-primary" id="uploadData">Tải lên</div>
+			<div class="btn btn-primary" id="downloadData">Tải xuống</div>
+			<div class="text" id="statusText">Số dữ liệu chưa tải lên hệ thống : 10</div>
+		</div>
+	</div><!-- END PAGE HOME -->
+
+	<div class="page customer">
+		<nav class="top-nav">
+			<div class="nav-btn btn-back multiPrev"><i class="fa fa-chevron-left"></i> Trở lại</div>
+			<div class="nav-header">
+				Thêm Khách Hàng
+			</div>
+		</nav>
+		<div class="clearfix"></div>
+		<div class="container">
+			<form id="addUser">
+				<div class="alert hidden"></div>
+				<input type="hidden" name="clientid">
+				<select name="outletid"></select>
+				<input type="text" name="familyName" placeholder="Họ">
+				<input type="text" name="givenName" placeholder="Tên">
+				<input type="text" name="unit" placeholder="Số nhà">
+				<input type="text" name="street" placeholder="Đường">
+				<input type="text" name="ward" placeholder="Phường/Xã">
+				<select name="provinceid">
+				</select>
+				<select name="districtid">
+				</select>
+				<input type="text" name="phone" placeholder="Số điện thoại">
+				<input type="text" name="consumerName" placeholder="Họ tên người sử dụng">
+				<!-- <input type="date" name="DOB" placeholder="Ngày sinh"> -->
+				<select class="inline" name="DOB_D">					
+				</select>
+				<select class="inline" name="DOB_M">					
+				</select>
+				<select class="inline" name="DOB_Y">					
+				</select>
+
+				<h4>Sữa trước đây</h4>
+				<select name="compowderproduct">
+				</select>
+				<select name="comliquidproduct">
+				</select>
+				<h4>Sữa hiện tại</h4>
+				<select name="abbpowderproduct">
+				</select>
+				<select name="abbliquidproduct">
+				</select>
+				<div class="form-group text-center">
+					<button class="btn btn-primary btn-half" id="resetFormUser">Làm lại</button>
+					<button class="btn btn-danger btn-half" id="deleteUser">Xóa</button>
+					<button class="btn btn-primary btn-half" id="submitFormUser">Lưu</button>
+				</div>
+			</form>
+			<div class="padding"></div>
+		</div>
+	</div><!-- END PAGE CUSTOMER -->
+
+	<div class="page inventory">
+		<nav class="top-nav">
+			<div class="nav-btn btn-back multiPrev"><i class="fa fa-chevron-left"></i> Trở lại</div>
+			<div class="nav-header">
+				Thống kê tồn kho
+			</div>
+		</nav>
+		<div class="clearfix"></div>
+		<div class="container">
+			<form id="addInventory">
+				<div class="alert hidden"></div>
+				<input type="hidden" name="clientid">
+				<select name="outletid"></select>
+				<select class="inline" name="inventoryD"></select>
+				<select class="inline" name="inventoryM"></select>
+				<select class="inline" name="inventoryY"></select>
+				
+				<div class="form-group">
+					<table>
+						<tbody>
+							<tr>
+								<th class="col-left">Sản phẩm</th>
+								<th class="col-right">Số lon</th>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+				<div class="form-group text-center fixedControl">
+					<button class="btn btn-primary btn-half" id="resetFormInventory">Làm lại</button>
+					<button class="btn btn-danger btn-half" id="deleteInventory">Xóa</button>
+					<button class="btn btn-primary btn-half" id="submitFormInventory">Lưu</button>
+				</div>
+			</form>
+			<div class="padding"></div>
+		</div>
+	</div><!-- END PAGE INVENTORY -->
+
+	<div class="page sellout">
+		<nav class="top-nav">
+			<div class="nav-btn btn-back multiPrev"><i class="fa fa-chevron-left"></i> Trở lại</div>
+			<div class="nav-header">
+				Thống kê doanh số
+			</div>
+		</nav>
+		<div class="clearfix"></div>
+		<div class="container">
+			<form id="addSellout">
+				<div class="alert hidden"></div>
+				<input type="hidden" name="clientid">
+				<select name="outletid"></select>
+				<select class="inline" name="selloutD"></select>
+				<select class="inline" name="selloutM"></select>
+				<select class="inline" name="selloutY"></select>
+				<div class="form-group">
+					<table>
+						<tbody>
+							<tr>
+								<th class="col-left">Sản phẩm</th>
+								<th class="col-right">Số lon</th>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+				<div class="form-group text-center fixedControl">
+					<button class="btn btn-primary btn-half" id="resetFormSellout">Làm lại</button>
+					<button class="btn btn-danger btn-half" id="deleteSellout">Xóa</button>
+					<button class="btn btn-primary btn-half" id="submitFormSellout">Lưu</button>
+				</div>
+			</form>
+			<div class="padding"></div>
+		</div>
+	</div><!-- END PAGE SELLOUT -->
+
+	<div class="page clientdata">
+		<nav class="top-nav">
+			<div class="nav-btn btn-back" onclick="gotoPage('home');"><i class="fa fa-chevron-left"></i> Trở lại</div>
+			<div class="nav-header">
+				Dữ liệu chưa tải lên
+			</div>
+		</nav>
+		<div class="clearfix"></div>
+		<div class="container">
+			<h3><i class="animate fa fa-angle-up"></i> Danh sách khách hàng</h3>
+			<div class="list" id="listCustomer">				
+			</div>
+			<h3><i class="animate fa fa-angle-up"></i> Danh sách tồn kho</h3>
+			<div class="list" id="listInventory"></div>
+			<h3><i class="animate fa fa-angle-up"></i> Danh sách doanh số</h3>
+			<div class="list" id="listSellout"></div>
+		</div>
+	</div><!-- END PAGE CLIENTDATA -->
+
+	<script type="text/javascript" src="cordova.js"></script>
+	<script type="text/javascript" src="js/jquery-2.1.4.min.js"></script>
+	<script type="text/javascript" src="js/fastclick.js"></script>
+	<script type="text/javascript" src="js/data.js"></script>
+	<script type="text/javascript" src="js/app.js"></script>
+</body>
+</html>
