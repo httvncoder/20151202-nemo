@@ -35,7 +35,7 @@ $(document).ready(function () {
   jqmReadyDeferred.resolve();
 });
 
-$.when(jqmReadyDeferred, deviceReadyDeferred).then(init);
+$.when(jqmReadyDeferred).then(init);
 
 function init() {
 	FastClick.attach(document.body)	
@@ -60,13 +60,7 @@ function init() {
 		return false
 	})
 	$("#btnLogout").click(function(){
-		USER = {}
-		INVENTORY = []
-		SELLOUT = []
-		localStorage.removeItem('user')
-		localStorage.removeItem('inventory')
-		localStorage.removeItem('sellout')
-		gotoPage('login')
+		doLogout()		
 		console.log('Logout now')
 		return false
 	})
@@ -118,6 +112,10 @@ function init() {
 		}
 		return false
 	})
+	$('#addUser').submit(function(){
+		//$('#submitFormUser').click()
+		return false
+	})
 	$('#deleteUser').click(function(){
 		if ( !window.confirm('Bạn chắc chắn muốn xóa bản ghi này?') ) {
 			return false
@@ -164,7 +162,7 @@ function init() {
 		}
 		return false
 	})
-	$('#addInventory select[name="outletid"], select[name="inventoryD"], select[name="inventoryM"], select[name="inventoryY"]').change(function(){
+	$('#addInventory select[name="outletid"], select[name="inv_date"]').change(function(){
 		var day = getDate('#addInventory','inventory')
 		var filter1 = INVENTORY.items('cycledate',day)
 		if (null == filter1)
@@ -278,7 +276,7 @@ function doLogin() {
 				showError(ERROR_CODE[obj.responsecode])
 		},
 		error: function(xhr, status, error) {
-			console.log(xhr, status, error)
+			console.log(status)
 			showError(status)
 		},
 		complete: function() {
@@ -287,7 +285,17 @@ function doLogin() {
 	});	
 	return false;
 }
-
+function doLogout() {
+	USER = {}
+	INVENTORY = []
+	SELLOUT = []
+	localStorage.removeItem('user')
+	localStorage.removeItem('inventory')
+	localStorage.removeItem('sellout')
+	gotoPage('login')
+	$('#username').val('')
+	$('#password').val('')
+}
 function gotoPage(page) {
 	previousPage = $('.page.activePage').attr("class").split(' ')[1]
 	$('.page.activePage').hide();
@@ -339,7 +347,7 @@ function renderPageCustomer() {
   //render DOB
   renderSingleOptions('select[name="DOB_D"]',range(1,31),'<option value="">Ngày</option>')
   renderSingleOptions('select[name="DOB_M"]',range(1,12),'<option value="">Tháng</option>')
-  renderSingleOptions('select[name="DOB_Y"]',range(1930, (new Date()).getFullYear() + 1).reverse(),'<option value="">Năm sinh</option>')
+  renderSingleOptions('select[name="DOB_Y"]',range(1930, (new Date()).getFullYear() + 1).reverse(),'<option value="">Năm</option>')
 
   var comPowderMilk = COMPETITOR_PRODUCTS.filter(function(obj){return obj.type == 'P'})
   var comLiquidMilk = COMPETITOR_PRODUCTS.filter(function(obj){return obj.type == 'L'})
@@ -354,12 +362,8 @@ function renderPageCustomer() {
 	$('#deleteUser').hide()
 }
 function renderPageInventory() {
-	renderOptions('#addInventory select[name="outletid"]', OUTLETS, 'id', 'name', '<option value="">Chọn cửa hàng</option>');
-	
-	//render DOB
-  renderSingleOptions('select[name="inventoryD"]',range(1,31),'<option value="">Ngày thống kê</option>')
-  renderSingleOptions('select[name="inventoryM"]',range(1,12),'<option value="">Tháng</option>')
-  renderSingleOptions('select[name="inventoryY"]',range(1930, (new Date()).getFullYear() + 1).reverse(),'<option value="">Năm</option>')
+	renderOptions('#addInventory select[name="outletid"]', OUTLETS, 'id', 'name', '<option value="">Chọn cửa hàng</option>');	
+  renderOptions('select[name="inv_date"]',INV_DATE, 'cycledate','desc','<option value="">Ngày thống kê</option>')  
 
   //render data table
   if (!$('#addInventory').hasClass('isRendering')) {
@@ -375,9 +379,9 @@ function renderPageInventory() {
 function renderPageSellout() {
 	renderOptions('#addSellout select[name="outletid"]', OUTLETS, 'id', 'name', '<option value="">Chọn cửa hàng</option>');
 	//render DOB
-  renderSingleOptions('select[name="selloutD"]',range(1,31),'<option value="">Ngày thống kê</option>')
+  renderSingleOptions('select[name="selloutD"]',range(1,31),'<option value="">Ngày</option>')
   renderSingleOptions('select[name="selloutM"]',range(1,12),'<option value="">Tháng</option>')
-  renderSingleOptions('select[name="selloutY"]',range(1930, (new Date()).getFullYear() + 1).reverse(),'<option value="">Năm</option>')
+  renderSingleOptions('select[name="selloutY"]',range((new Date()).getFullYear() - 1, (new Date()).getFullYear() + 1).reverse(),'<option value="">Năm</option>')
 
   //render data table
   if (!$('#addSellout').hasClass('isRendering')) {
@@ -452,7 +456,7 @@ function resetForm(selector, doConfirm) {
 		doConfirm = true;
 	}
 	if (doConfirm) {
-		var isReset = confirm("Bạn có muốn trắng mẫu đơn để làm lại?");
+		var isReset = confirm("Bạn có xóa nội dung đã nhập để làm lại?");
 		if (isReset == false) 
 			return;		
 	}
@@ -468,6 +472,7 @@ function syncDown() {
 	var defCompetitor = $.Deferred()
 	var defAbbott 		= $.Deferred()
 	var defNemo				= $.Deferred()
+	var defDate				= $.Deferred()
 	$("#statusText").text("Đang tải xuống ...")
 	showWait()
 	$.when(defProvince,defOutlet,defCompetitor,defAbbott).then(function(){
@@ -476,7 +481,7 @@ function syncDown() {
 		if (isDataReady()) {
 			$("#statusText").text("Tải dữ liệu thành công!")
 		} else {
-			$("#statusText").text("Dữ liệu chưa sẵn sàng! <br/> Vui lòng cập nhật lại dữ liệu sau ít phút. <br/>Nếu tình trạng này liên tục lặp lại, vui lòng liên lạc quản trị viên.")
+			$("#statusText").html("Dữ liệu chưa sẵn sàng! <br/> Vui lòng cập nhật lại dữ liệu sau ít phút. <br/>Nếu tình trạng này liên tục lặp lại, vui lòng liên lạc quản trị viên.")
 		}
 
 		//another stuff after sync down
@@ -496,7 +501,7 @@ function syncDown() {
     	localStorage.provinces = JSON.stringify(PROVINCES)
 		},
 		error: function(xhr, status, error) {
-			console.log(xhr, status, error)
+			console.log(status)
 		},
 		complete: function(){
     	defProvince.resolve()
@@ -515,7 +520,7 @@ function syncDown() {
     	localStorage.outlets = JSON.stringify(OUTLETS)
 		},
 		error: function(xhr, status, error) {
-			console.log(xhr, status, error)
+			console.log(status)
 		},
 		complete: function(){
     	defOutlet.resolve()
@@ -534,7 +539,7 @@ function syncDown() {
     	localStorage.competitor_products = JSON.stringify(COMPETITOR_PRODUCTS)
 		},
 		error: function(xhr, status, error) {
-			console.log(xhr, status, error)
+			console.log(status)
 		},
 		complete: function(){
     	defCompetitor.resolve()
@@ -553,7 +558,7 @@ function syncDown() {
     	localStorage.abbott_products = JSON.stringify(ABBOTT_PRODUCTS)
 		},
 		error: function(xhr, status, error) {
-			console.log(xhr, status, error)
+			console.log(status)
 		}, 
 		complete: function(){
     	defAbbott.resolve()
@@ -572,12 +577,32 @@ function syncDown() {
     	localStorage.nemo_products = JSON.stringify(NEMO_PRODUCTS)
 		},
 		error: function(xhr, status, error) {
-			console.log(xhr, status, error)
+			console.log(status)
 		},
 		complete: function(){
     	defNemo.resolve()
 		}
 	});	
+	$.ajax({
+    url: DOMAIN+'/SyncDownInventoryCycleController',
+    data: '',
+    method: 'POST',
+    processData: false,
+    contentType: 'application/json',
+    crossDomain:true,
+    success: function(data, status, xhr) {
+    	var obj = JSON.parse(data)
+    	INV_DATE = obj.inventorycycle
+    	localStorage.inv_date = JSON.stringify(INV_DATE)
+		},
+		error: function(xhr, status, error) {
+			console.log(status)
+		},
+		complete: function(){
+    	defDate.resolve()
+		}
+	});	
+	
 }
 
 function getDOB() {
@@ -767,12 +792,15 @@ function validateSellout(data) {
 		valid.message += "<br/>+ Chưa chọn cửa hàng."
 	}
 	if (data.cycledate == '' || data.cycledate.length < 8){
-		valid.message += "<br/>+ Chưa chọn đúng ngày thống kê."
+		valid.message += "<br/>+ Chọn sai ngày thống kê."
 	} else {
+		if (!checkDate(data.cycledate)) {
+			valid.message += "<br/>+ Chọn sai ngày thống kê"
+		}
 		var d = new Date();
-		d.setDate(formGet('select', 'selloutD', '#addSellout'))
-		d.setMonth(formGet('select', 'selloutM', '#addSellout') - 1)
-		d.setYear(formGet('select', 'selloutY', '#addSellout'))
+		d.setDate(date2d(data.cycledate))
+		d.setMonth(date2m(data.cycledate) - 1)
+		d.setYear(date2y(data.cycledate))
 		var currentDate = new Date()
 		if (d > currentDate) {
 			valid.message += "<br/>+ Không thể chọn ngày trong tương lai"
@@ -802,7 +830,7 @@ function createReportInventory() {
 		userid: USER.userid,
 		usersysid: USER.sysid,
 		outletid: $('#addInventory select[name="outletid"]').val(),
-		cycledate: getDate('#addInventory','inventory'),
+		cycledate: formGet('select', 'inv_date', '#addInventory'),
 		inventory: countProduct('#addInventory')
 	}
 	
@@ -901,11 +929,7 @@ function fillInventory(id) {
 	obj = INVENTORY.item('clientid', id)
 
 	renderOptions('#addInventory select[name="outletid"]', OUTLETS, 'id', 'name', '<option value="">Chọn cửa hàng</option>', obj.outletid);
-
-	//render DOB
-  renderSingleOptions('select[name="inventoryD"]',range(1,31),'<option value="">Ngày thống kê</option>', obj.cycledate.substr(0,2)*1)
-  renderSingleOptions('select[name="inventoryM"]',range(1,12),'<option value="">Tháng</option>', obj.cycledate.substr(2,2)*1)
-  renderSingleOptions('select[name="inventoryY"]',range(1930, (new Date()).getFullYear() + 1).reverse(),'<option value="">Năm</option>', obj.cycledate.substr(4,4))
+	renderOptions('select[name="inv_date"]',INV_DATE, 'cycledate','desc','<option value="">Ngày thống kê</option>', obj.cycledate)  
 
   //render data table
   if (!$('#addInventory').hasClass('isRendering')) {
@@ -927,7 +951,7 @@ function fillSellout(id) {
 	//render DOB
   renderSingleOptions('select[name="selloutD"]',range(1,31),'<option value="">Ngày thống kê</option>', obj.cycledate.substr(0,2)*1)
   renderSingleOptions('select[name="selloutM"]',range(1,12),'<option value="">Tháng</option>', obj.cycledate.substr(2,2)*1)
-  renderSingleOptions('select[name="selloutY"]',range(1930, (new Date()).getFullYear() + 1).reverse(),'<option value="">Năm</option>', obj.cycledate.substr(4,4))
+  renderSingleOptions('select[name="selloutY"]',range((new Date()).getFullYear() - 1, (new Date()).getFullYear() + 1).reverse(),'<option value="">Năm</option>', obj.cycledate.substr(4,4))
 
   //render data table
   if (!$('#addSellout').hasClass('isRendering')) {
@@ -979,7 +1003,7 @@ function syncUp() {
     	localStorage.customers = JSON.stringify(CUSTOMERS)
 		},
 		error: function(xhr, status, error) {
-			console.log(xhr, status, error)
+			console.log(status)
 		}, 
 		complete: function() {
     	defCus.resolve()			
@@ -1010,7 +1034,7 @@ function syncUp() {
     	localStorage.inventory = JSON.stringify(INVENTORY)
 		},
 		error: function(xhr, status, error) {
-			console.log(xhr, status, error)
+			console.log(status)
 		}, 
 		complete: function() {
     	defInv.resolve()
@@ -1041,7 +1065,7 @@ function syncUp() {
     	localStorage.SELLOUT = JSON.stringify(SELLOUT)
 		},
 		error: function(xhr, status, error) {
-			console.log(xhr, status, error)
+			console.log(status)
 		}, 
 		complete: function() {
     	defSel.resolve()

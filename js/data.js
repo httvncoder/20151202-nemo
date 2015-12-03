@@ -12,6 +12,8 @@ var INVENTORY = [];
 
 var SELLOUT = [];
 
+var INV_DATE = [];
+
 var OUTLETS = [];
 
 var PROVINCES = [];
@@ -42,6 +44,10 @@ function initOnlineData() {
     if( !isLSEmpty('nemo_products') ) {
         NEMO_PRODUCTS = JSON.parse(localStorage.nemo_products)
         console.log('Load nemo products.')
+    }
+    if( !isLSEmpty('inv_date') ) {
+        INV_DATE = JSON.parse(localStorage.inv_date)
+        console.log('Load nemo inventory date.')
     }
 }
 function initLocalData() {
@@ -173,4 +179,23 @@ function deleteRecord(id, data) {
         localStorage[data.toLowerCase()] = JSON.stringify(window[data])
         $('div.row[data-id="'+id+'"]').remove()
     }
+}
+function checkDate(strDate) {
+    var d = date2d(strDate)
+    var m = date2m(strDate)
+    var y = date2y(strDate)
+    var date = new Date(y,m-1,d);
+    if (date.getFullYear() == y && date.getMonth() + 1 == m && date.getDate() == d) {
+      return true
+    }
+    return false
+}
+function date2m(strDate){
+    return parseInt(strDate.substr(2,2), 10)
+}
+function date2d(strDate) {
+    return parseInt(strDate.substr(0,2), 10)
+}
+function date2y(strDate) {
+    return parseInt(strDate.substr(4,4), 10)
 }

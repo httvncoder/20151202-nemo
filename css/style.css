@@ -307,3 +307,14 @@ table {
 .clientdata h3 i.fa {
 	float:right;
 }
+
+/*iPhone 4*/
+@media only screen and (min-device-width : 320px) and (max-device-width : 480px) and (orientation : portrait) {
+  div.username {
+    display: block;
+    width: 220px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
