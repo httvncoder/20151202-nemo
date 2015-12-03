@@ -35,7 +35,7 @@ $(document).ready(function () {
   jqmReadyDeferred.resolve();
 });
 
-$.when(jqmReadyDeferred).then(init);
+$.when(jqmReadyDeferred, deviceReadyDeferred).then(init);
 
 function init() {
 	FastClick.attach(document.body)	
@@ -456,7 +456,7 @@ function resetForm(selector, doConfirm) {
 		doConfirm = true;
 	}
 	if (doConfirm) {
-		var isReset = confirm("Bạn có xóa nội dung đã nhập để làm lại?");
+		var isReset = confirm("Bạn có muốn xóa nội dung đã nhập để làm lại?");
 		if (isReset == false) 
 			return;		
 	}
@@ -975,6 +975,8 @@ function syncUp() {
 		hideWait()
 		if (errorMsg !== "") {
 			errorMsg += " Kiểm tra dữ liệu chưa đồng bộ."
+		} else {
+			errorMsg  = "Tải lên thành công!"
 		}
 		$("#statusText").text(errorMsg)
 	})
