@@ -71,11 +71,11 @@ function isLSEmpty(key) {
 }
 function isDataReady() {
     if ( false 
+        || 0 == INV_DATE.length
         || 0 == OUTLETS.length  
         || 0 == PROVINCES.length  
         || 0 == COMPETITOR_PRODUCTS.length  
-        || 0 == ABBOTT_PRODUCTS.length  
-        || 0 == NEMO_PRODUCTS.length )
+        || 0 == ABBOTT_PRODUCTS.length)
         return false
     return true
 }
@@ -107,10 +107,20 @@ function makeid(length)
 }
 function compareNemo(a,b) {
   if (a.seq < b.seq)
-    return -1;
+    return -1
   if (a.seq > b.seq)
-    return 1;
-  return 0;
+    return 1
+  return 0
+}
+Array.prototype.sortOn = function(key) {
+    this.sort(function(a,b){
+        if(a[key] < b[key]){
+            return -1
+        }else if(a[key] > b[key]){
+            return 1
+        }
+        return 0
+    })
 }
 
 Array.prototype.item = function(key, value) {
@@ -137,10 +147,7 @@ Array.prototype.items = function(key, value) {
         key = 'id'
     }
     return this.filter(function(item) {
-        return item[this.key] == this.value
-    }, {
-        key: key,
-        value: value
+        return item[key] == value
     })
 }
 
@@ -198,4 +205,8 @@ function date2d(strDate) {
 }
 function date2y(strDate) {
     return parseInt(strDate.substr(4,4), 10)
+}
+
+function dataSizeRemaining() {
+    return 1024 * 1024 * 5 - unescape(encodeURIComponent(JSON.stringify(localStorage))).length
 }

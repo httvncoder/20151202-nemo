@@ -20,7 +20,8 @@ var ERROR_CODE = {
 	"102": "Dữ liệu không đúng định dạng, kiểm tra lại form.",
 	"002": "Lưu thành công"
 }
-var USER = {};
+var ALL_ROLE = ['CAPTRNEWUSER', 'CAPTRINVENTORY', 'CAPTRPGSELLOUT']
+var USER = null;
 var previousPage = ''
 var deviceReadyDeferred = $.Deferred();
 var jqmReadyDeferred = $.Deferred();
@@ -35,7 +36,7 @@ $(document).ready(function () {
   jqmReadyDeferred.resolve();
 });
 
-$.when(jqmReadyDeferred, deviceReadyDeferred).then(init);
+$.when(jqmReadyDeferred).then(init);
 
 function init() {
 	FastClick.attach(document.body)	
@@ -44,6 +45,7 @@ function init() {
 	if (typeof localStorage.user != 'undefined') {
 		USER = JSON.parse(localStorage.user)
 		syncDown()
+		updateFeature()
 		gotoPage('home')
 		$('div.username').text(USER.name)
 	}
@@ -51,8 +53,9 @@ function init() {
 		if(previousPage=='clientdata'){
 			renderPageClientData()
 			gotoPage('clientdata')
+		} else {
+			gotoPage('home')			
 		}
-		gotoPage('home')
 	})
 	initLocalData()
 	$('#btnLogin').click(function(){
@@ -65,7 +68,7 @@ function init() {
 		return false
 	})
 	$('#uploadData').click(function(){
-		syncUp()
+		checkAuthentication(syncUp)
 	})
 	$('#downloadData').click(function(){
 		syncDown()
@@ -92,6 +95,7 @@ function init() {
 	//Page add customer
 	$('select[name="provinceid"]').change(function(){
   	var selected = PROVINCES.filter(function(item){return item.prov == this}, $(this).val());
+  	selected.sortOn('dist')
   	renderOptions('select[name="districtid"]', selected, 'dist', 'dist', '<option value="">Chọn quận huyện</option>');
   });
 	$('#resetFormUser').click(function(){
@@ -240,13 +244,19 @@ function hideWait() {
 }
 
 function updateStatus() {
-	var text = "Số dữ liệu chưa tải lên hệ thống : "
-	var countC = CUSTOMERS.length
-	var countI = INVENTORY.length
-	var countS = SELLOUT.length
-	$('#statusText').text(text+ (countC+countI+countS) )
+	var text = "Số dữ liệu chưa tải lên hệ thống : "	
+	$('#statusText').text(text+ countData() )
 }
 
+function countData() {
+	if (USER) {
+		var countC = CUSTOMERS.items('usersysid', USER.sysid).length
+		var countI = INVENTORY.items('usersysid', USER.sysid).length 
+		var countS = SELLOUT.items('usersysid', USER.sysid).length
+		return countC + countI + countS
+	}
+	return 0
+}
 
 function doLogin() {
 	console.log('Login now')
@@ -269,15 +279,17 @@ function doLogin() {
     		USER.password = $('#password').val()
     		localStorage.setItem('user', JSON.stringify(USER)) 
 				syncDown()	
+				updateFeature()
 				gotoPage('home')	
 				$('div.username').text(USER.name)
+				$('.page.login .alert').hide()
     	}
 			else 
 				showError(ERROR_CODE[obj.responsecode])
 		},
 		error: function(xhr, status, error) {
 			console.log(status)
-			showError(status)
+			showError("Không có kết nối Internet")
 		},
 		complete: function() {
 			hideWait()
@@ -286,12 +298,6 @@ function doLogin() {
 	return false;
 }
 function doLogout() {
-	USER = {}
-	INVENTORY = []
-	SELLOUT = []
-	localStorage.removeItem('user')
-	localStorage.removeItem('inventory')
-	localStorage.removeItem('sellout')
 	gotoPage('login')
 	$('#username').val('')
 	$('#password').val('')
@@ -347,7 +353,7 @@ function renderPageCustomer() {
   //render DOB
   renderSingleOptions('select[name="DOB_D"]',range(1,31),'<option value="">Ngày</option>')
   renderSingleOptions('select[name="DOB_M"]',range(1,12),'<option value="">Tháng</option>')
-  renderSingleOptions('select[name="DOB_Y"]',range(1930, (new Date()).getFullYear() + 1).reverse(),'<option value="">Năm</option>')
+  renderSingleOptions('select[name="DOB_Y"]',range((new Date()).getFullYear() - 85, (new Date()).getFullYear() + 1).reverse(),'<option value="">Năm</option>')
 
   var comPowderMilk = COMPETITOR_PRODUCTS.filter(function(obj){return obj.type == 'P'})
   var comLiquidMilk = COMPETITOR_PRODUCTS.filter(function(obj){return obj.type == 'L'})
@@ -360,6 +366,7 @@ function renderPageCustomer() {
 
 	$('#resetFormUser').show()
 	$('#deleteUser').hide()
+  $('.page.customer .nav-header').text('Thêm khách hàng')		
 }
 function renderPageInventory() {
 	renderOptions('#addInventory select[name="outletid"]', OUTLETS, 'id', 'name', '<option value="">Chọn cửa hàng</option>');	
@@ -373,7 +380,7 @@ function renderPageInventory() {
   resetForm('#addInventory', false)
   $('#resetFormInventory').show()
   $('#deleteInventory').hide()
-
+  $('.page.inventory .nav-header').text('Thống kê tồn kho')
 }
 
 function renderPageSellout() {
@@ -392,49 +399,53 @@ function renderPageSellout() {
 	resetForm('#addSellout', false)
 	$('#resetFormSellout').show()
   $('#deleteSellout').hide()
+  $('.page.sellout .nav-header').text('Thống kê doanh số')
+
 }
 function renderPageClientData() {
 	//partial Customer
 	var html = ''
 	var tmp = '<div class="row %alert%" data-id="%cusid%"><i class="fa fa-close" onclick="deleteRecord(\'%cusid%\', \'CUSTOMERS\')"></i><div class="title" onclick="fillFormCustomer(\'%cusid%\');gotoPage(\'customer\')">%cusname%</div><div class="subtitle">%cusadd% - %cusfone%</div></div>'
-	for(var i = 0; i < CUSTOMERS.length; i++) {
-		row = tmp.replace(/%cusid%/g, CUSTOMERS[i].clientid)
-		row = row.replace(/%cusname%/, CUSTOMERS[i].cusfamilyname + ' ' + CUSTOMERS[i].cusgivenname)
-		row = row.replace(/%cusadd%/, CUSTOMERS[i].district)
-		row = row.replace(/%cusfone%/, CUSTOMERS[i].phone)
-		row = row.replace(/%alert%/, ('syncuperror' in CUSTOMERS[i] || CUSTOMERS[i].syncuperror == true) ? 'alert' : '')
+	var curData = CUSTOMERS.items('usersysid', USER.sysid) 
+	for(var i = 0; i < curData.length; i++) {
+		row = tmp.replace(/%cusid%/g, curData[i].clientid)
+		row = row.replace(/%cusname%/, curData[i].cusfamilyname + ' ' + curData[i].cusgivenname)
+		row = row.replace(/%cusadd%/, curData[i].district)
+		row = row.replace(/%cusfone%/, curData[i].phone)
+		row = row.replace(/%alert%/, ('syncuperror' in curData[i] || curData[i].syncuperror == true) ? 'alert' : '')
 		html += row
 	}	
+	$('h3.ROLE_CAPTRNEWUSER span').text(' Danh sách khách hàng ('+curData.length+')')
 	$('#listCustomer').html(html)
 
 	//partial Inventory
 	html = ''
 	tmp = '<div class="row %alert%" data-id="%pid%"><i class="fa fa-close" onclick="deleteRecord(\'%pid%\', \'INVENTORY\')"></i><div class="title" onclick="fillInventory(\'%pid%\');gotoPage(\'inventory\')">%name%</div><div class="subtitle">%date%</div></div>'
-	for(var i = 0; i < INVENTORY.length; i++) {		
-		var outlet = OUTLETS.item(INVENTORY[i].outletid)
-		var name = outlet.name.split('-')
-		name.shift()
-		row = tmp.replace(/%name%/, name.join('-'))
-		row = row.replace(/%date%/, vnDate(INVENTORY[i].cycledate))
-		row = row.replace(/%pid%/g, INVENTORY[i].clientid)
-		row = row.replace(/%alert%/, INVENTORY[i].syncuperror == true ? 'alert' : '')
+	var curData = INVENTORY.items('usersysid', USER.sysid)
+	for(var i = 0; i < curData.length; i++) {		
+		var outlet = OUTLETS.item(curData[i].outletid)
+		row = tmp.replace(/%name%/, outlet.name)
+		row = row.replace(/%date%/, vnDate(curData[i].cycledate))
+		row = row.replace(/%pid%/g, curData[i].clientid)
+		row = row.replace(/%alert%/, curData[i].syncuperror == true ? 'alert' : '')
 		html += row
 	}	
+	$('h3.ROLE_CAPTRINVENTORY span').text('Danh sách tồn kho ('+curData.length+')')
 	$('#listInventory').html(html)
 
 	//partial Sellout
 	html = ''
 	tmp = '<div class="row %alert%" data-id="%pid%"><i class="fa fa-close" onclick="deleteRecord(\'%pid%\', \'SELLOUT\')"></i><div class="title" onclick="fillSellout(\'%pid%\');gotoPage(\'sellout\')">%name%</div><div class="subtitle">%date%</div></div>'
-	for(var i = 0; i < SELLOUT.length; i++) {
-		var outlet = OUTLETS.item(SELLOUT[i].outletid)
-		var name = outlet.name.split('-')
-		name.shift()
-		row = tmp.replace(/%name%/, name.join('-'))
-		row = row.replace(/%date%/, vnDate(SELLOUT[i].cycledate))
-		row = row.replace(/%pid%/g, SELLOUT[i].clientid)
-		row = row.replace(/%alert%/, SELLOUT[i].syncuperror == true ? 'alert' : '')
+	var curData = SELLOUT.items('usersysid', USER.sysid)
+	for(var i = 0; i < curData.length; i++) {
+		var outlet = OUTLETS.item(curData[i].outletid)
+		row = tmp.replace(/%name%/, outlet.name)
+		row = row.replace(/%date%/, vnDate(curData[i].cycledate))
+		row = row.replace(/%pid%/g, curData[i].clientid)
+		row = row.replace(/%alert%/, curData[i].syncuperror == true ? 'alert' : '')
 		html += row
 	}	
+	$('h3.ROLE_CAPTRPGSELLOUT span').text('Danh sách doanh số ('+curData.length+')')	
 	$('#listSellout').html(html)
 }
 
@@ -473,20 +484,23 @@ function syncDown() {
 	var defAbbott 		= $.Deferred()
 	var defNemo				= $.Deferred()
 	var defDate				= $.Deferred()
+	var countToDetectLostInternet = 0
 	$("#statusText").text("Đang tải xuống ...")
 	showWait()
-	$.when(defProvince,defOutlet,defCompetitor,defAbbott).then(function(){
+	$.when(defProvince,defOutlet,defCompetitor,defAbbott, defNemo, defDate).then(function(){
 		hideWait()
 		initOnlineData()
 		if (isDataReady()) {
-			$("#statusText").text("Tải dữ liệu thành công!")
+			$("#statusText").text("Tải xuống thành công!")
 		} else {
-			$("#statusText").html("Dữ liệu chưa sẵn sàng! <br/> Vui lòng cập nhật lại dữ liệu sau ít phút. <br/>Nếu tình trạng này liên tục lặp lại, vui lòng liên lạc quản trị viên.")
+			$("#statusText").html("Dữ liệu chưa sẵn sàng!")
 		}
 
-		//another stuff after sync down
-		$('#addInventory').removeClass('isRendering')
-		$('#addSellout').removeClass('isRendering')
+		// Đếm số lượng defferred, đủ 6 cái ajax đều error thì chắc là mất kết nối rồi
+		if (countToDetectLostInternet == 6) {
+			countToDetectLostInternet = 0
+			$("#statusText").html("Không có kết nối Internet!")	
+		}
 	})
 	$.ajax({
     url: DOMAIN+'/SyncDownProvinceController',
@@ -498,9 +512,11 @@ function syncDown() {
     success: function(data, status, xhr) {
     	var obj = JSON.parse(data)
     	PROVINCES = obj.province
+    	PROVINCES.sortOn('prov')
     	localStorage.provinces = JSON.stringify(PROVINCES)
 		},
 		error: function(xhr, status, error) {
+			++countToDetectLostInternet
 			console.log(status)
 		},
 		complete: function(){
@@ -517,9 +533,11 @@ function syncDown() {
     success: function(data, status, xhr) {
     	var obj = JSON.parse(data)
     	OUTLETS = obj.pgoutlet
+    	OUTLETS.sortOn('name')
     	localStorage.outlets = JSON.stringify(OUTLETS)
 		},
 		error: function(xhr, status, error) {
+			++countToDetectLostInternet
 			console.log(status)
 		},
 		complete: function(){
@@ -536,9 +554,11 @@ function syncDown() {
     success: function(data, status, xhr) {
     	var obj = JSON.parse(data)
     	COMPETITOR_PRODUCTS = obj.competitorproduct
+    	COMPETITOR_PRODUCTS.sortOn('name')
     	localStorage.competitor_products = JSON.stringify(COMPETITOR_PRODUCTS)
 		},
 		error: function(xhr, status, error) {
+			++countToDetectLostInternet
 			console.log(status)
 		},
 		complete: function(){
@@ -555,9 +575,11 @@ function syncDown() {
     success: function(data, status, xhr) {
     	var obj = JSON.parse(data)
     	ABBOTT_PRODUCTS = obj.abbottproduct
+    	ABBOTT_PRODUCTS.sortOn('name')
     	localStorage.abbott_products = JSON.stringify(ABBOTT_PRODUCTS)
 		},
 		error: function(xhr, status, error) {
+			++countToDetectLostInternet
 			console.log(status)
 		}, 
 		complete: function(){
@@ -575,8 +597,13 @@ function syncDown() {
     	var obj = JSON.parse(data)
     	NEMO_PRODUCTS = obj.nemoproduct
     	localStorage.nemo_products = JSON.stringify(NEMO_PRODUCTS)
+    	
+    	//remove để làm mới danh sách trên giao diện
+    	$('#addInventory').removeClass('isRendering')    	
+    	$('#addSellout').removeClass('isRendering')    	
 		},
 		error: function(xhr, status, error) {
+			++countToDetectLostInternet
 			console.log(status)
 		},
 		complete: function(){
@@ -596,6 +623,7 @@ function syncDown() {
     	localStorage.inv_date = JSON.stringify(INV_DATE)
 		},
 		error: function(xhr, status, error) {
+			++countToDetectLostInternet
 			console.log(status)
 		},
 		complete: function(){
@@ -622,15 +650,15 @@ function createCustomer() {
 		userid:USER.userid, 
 		usersysid:USER.sysid, 
 		outletid: formGet('select', 'outletid'), 
-		cusfamilyname:formGet('input','familyName'), 
-		cusgivenname:formGet('input','givenName'), 
-		unit: formGet('input','unit'), 
-		street:formGet('input', 'street'), 
-		ward:formGet('input', 'ward'), 
+		cusfamilyname:$.trim(formGet('input','familyName')), 
+		cusgivenname:$.trim(formGet('input','givenName')), 
+		unit: $.trim(formGet('input','unit')), 
+		street: $.trim(formGet('input', 'street')), 
+		ward: $.trim(formGet('input', 'ward')), 
 		province:formGet('select', 'provinceid'), 
 		district:formGet('select', 'districtid'), 
-		phone:formGet('input', 'phone'), 
-		consumername: formGet('input', 'consumerName'), 
+		phone: $.trim(formGet('input', 'phone')), 
+		consumername: $.trim(formGet('input', 'consumerName')), 
 		dob:getDOB(), 
 		compowderproduct:formGet('select','compowderproduct'), 
 		comliquidproduct:formGet('select','comliquidproduct'), 
@@ -685,23 +713,23 @@ function getDate(form_selector, input_name) {
 function validateCustomer(data) {
 	var valid = {message:''}
 	var filter = [
-		{field:'outletid',label:'Cửa hàng'}, 
-		{field:'cusfamilyname', label:'Họ'}, 
-		{field:'cusgivenname', label: 'Tên'}, 
-		{field:'street', label:'Đường'},
-		{field:'province', label:'Tỉnh/thành phố'},
-		{field:'district', label:'Quận/huyện'},
-		{field:'phone', label:'Số điện thoại'}, 
-		{field:'consumername', label:'Người sử dụng'}
+		{field:'outletid',label:'Cửa hàng', action:'chọn'}, 
+		{field:'cusfamilyname', label:'họ khách hàng', action: 'nhập'}, 
+		{field:'cusgivenname', label: 'tên khách hàng', action: 'nhập'}, 
+		{field:'street', label:'đường', action:'nhập'},
+		{field:'province', label:'Tỉnh/thành phố', action:'chọn'},
+		{field:'district', label:'Quận/huyện', action: 'chọn'},
+		{field:'phone', label:'Số điện thoại', action: 'nhập'}, 
+		{field:'consumername', label:'họ tên người sử dụng', action:'nhập'}
 	]
 	for (var i = 0; i<filter.length; i++) {
 		if (data[filter[i].field] == '') {
-			valid.message += "<br/>+ Phải nhập "+filter[i].label+" "
+			valid.message += "<br/>● Chưa "+filter[i].action+" "+filter[i].label+" "
 		}
 	}
 	
 	if( !(data.phone.length == 10 || data.phone.length == 11) ) {
-		valid.message += "<br/>+ Số điện thoại dài 10 hoặc 11 số"
+		valid.message += "<br/>● Số điện thoại không đúng"
 	}
 
 	var prevPowder 	= formGet('select','compowderproduct')
@@ -714,16 +742,16 @@ function validateCustomer(data) {
 
 	var dob = data.dob
 	if (dob != '' && dob.length < 8) {
-		valid.message += "<br/>+ Ngày sinh chưa nhập chính xác. "
+		valid.message += "<br/>● Ngày sinh chưa nhập chính xác. "
 	}
 	if ('' === prevPowder && '' === prevLiqid) {
-		valid.message += "<br/>+ Chưa chọn loại sữa trước đây."
+		valid.message += "<br/>● Chưa chọn loại sữa trước đây."
 	}		
 	if (null === powder && null === liqid) {
-		valid.message += "<br/>+ Chưa chọn loại sữa hiện tại. "
+		valid.message += "<br/>● Chưa chọn loại sữa hiện tại. "
 	} else {
 		if ( (isManProduct(powder) || isManProduct(liqid)) && dob=="" ) {
-			valid.message += "<br/>+ Ngày sinh bắt buộc nhập. "
+			valid.message += "<br/>● Ngày sinh bắt buộc nhập. "
 		}
 		if ( !isFutProduct(powder) && !isFutProduct(liqid) && dob != '') {
 			var d = new Date();
@@ -732,14 +760,14 @@ function validateCustomer(data) {
 			d.setYear(formGet('select', 'DOB_Y'))
 			var currentDate = new Date()
 			if (d > currentDate) 
-				valid.message += "<br/>+ Ngày sinh không thể trong tương lai. "
+				valid.message += "<br/>● Ngày sinh không thể trong tương lai. "
 		}
 	}
 
 	//Another validate
 	if (valid.message == '')
 		return true
-	valid.message = "Form nhập liệu có lỗi:" + valid.message
+	valid.message = "Thông tin chưa hợp lệ:" + valid.message
 	return valid;
 }
 function isManProduct(p) {
@@ -759,20 +787,20 @@ function isFutProduct(p) {
 function validateInventory(data) {
 	var valid = {message:''}
 	if (data.inventory.length == 0)
-		valid.message += "<br/>+ Ít nhất có một sản phẩm được ghi lại. "
+		valid.message += "<br/>● Chưa nhập số lượng. "
 	if (data.outletid == '') {
-		valid.message += "<br/>+ Chưa chọn cửa hàng."
+		valid.message += "<br/>● Chưa chọn cửa hàng."
 	}
 	if (data.cycledate == '' || data.cycledate.length < 8){
-		valid.message += "<br/>+ Chưa chọn đúng ngày thống kê."
+		valid.message += "<br/>● Chưa chọn đúng ngày thống kê."
 	} 
 
 	var isNumberError = 0
 	$('input.inv-product.alert').removeClass('alert')
 	for(var i = 0; i < data.inventory.length; i++) {
-		if (isNaN(data.inventory[i].qty)){
+		if (data.inventory[i].qty != parseInt(data.inventory[i].qty, 10)){
 			if (isNumberError == 0)
-				valid.message += "<br/>+ Chỉ cho phép nhập số nguyên"
+				valid.message += "<br/>● Số lượng chưa đúng"
 			var eleError = $('input.inv-product[data-id="'+data.inventory[i].productid+'"]')
 			eleError.addClass('alert')			
 			isNumberError = 1
@@ -780,22 +808,22 @@ function validateInventory(data) {
 	}
 	if (valid.message == '')
 		return true
-	valid.message = "Form thống kê có các lỗi:" + valid.message
+	valid.message = "Thông tin chưa hợp lệ:" + valid.message
 	return valid;
 }
 
 function validateSellout(data) {
 	var valid = {message:''}
 	if (data.sellout.length == 0)
-		valid.message += "<br/>+ Ít nhất có một sản phẩm được ghi lại. "
+		valid.message += "<br/>● Chưa nhập số lượng. "
 	if (data.outletid == '') {
-		valid.message += "<br/>+ Chưa chọn cửa hàng."
+		valid.message += "<br/>● Chưa chọn ngày thống kê."
 	}
 	if (data.cycledate == '' || data.cycledate.length < 8){
-		valid.message += "<br/>+ Chọn sai ngày thống kê."
+		valid.message += "<br/>● Chưa chọn ngày thống kê."
 	} else {
 		if (!checkDate(data.cycledate)) {
-			valid.message += "<br/>+ Chọn sai ngày thống kê"
+			valid.message += "<br/>● Chọn sai ngày thống kê."
 		}
 		var d = new Date();
 		d.setDate(date2d(data.cycledate))
@@ -803,16 +831,16 @@ function validateSellout(data) {
 		d.setYear(date2y(data.cycledate))
 		var currentDate = new Date()
 		if (d > currentDate) {
-			valid.message += "<br/>+ Không thể chọn ngày trong tương lai"
+			valid.message += "<br/>● Không thể chọn ngày trong tương lai"
 		}
 	}
 
 	var isNumberError = 0
 	$('input.inv-product.alert').removeClass('alert')
 	for(var i = 0; i < data.sellout.length; i++) {
-		if (isNaN(data.sellout[i].qty)){
+		if (data.sellout[i].qty != parseInt(data.sellout[i].qty, 10)){
 			if (isNumberError == 0)
-				valid.message += "<br/>+ Chỉ cho phép nhập số nguyên"
+				valid.message += "<br/>● Số lượng chưa đúng"
 			var eleError = $('input.inv-product[data-id="'+data.sellout[i].productid+'"]')
 			eleError.addClass('alert')			
 			isNumberError = 1
@@ -820,7 +848,7 @@ function validateSellout(data) {
 	}
 	if (valid.message == '')
 		return true
-	valid.message = "Form thống kê có các lỗi:" + valid.message
+	valid.message = "Thông tin chưa hợp lệ:" + valid.message
 	return valid;
 }
 
@@ -896,7 +924,7 @@ function fillFormCustomer(id) {
 	var province = PROVINCES.filter(function(item){return item.prov == this}, obj.province);
 	renderOptions('select[name="districtid"]', province, 'dist', 'dist', '<option value="">Chọn quận huyện</option>', obj.district);
 
-	formSet('input', 'phone', obj.ward)
+	formSet('input', 'phone', obj.phone)
 	formSet('input', 'consumerName', obj.consumername)
 
   //render DOB
@@ -917,6 +945,7 @@ function fillFormCustomer(id) {
 
 	$('#resetFormUser').hide()
 	$('#deleteUser').show()
+  $('.page.customer .nav-header').text('Cập nhật khách hàng')	
 }
 
 function fillTableData(data, formSelector) {
@@ -942,6 +971,7 @@ function fillInventory(id) {
 
   $('#resetFormInventory').hide()
   $('#deleteInventory').show()
+  $('.page.inventory .nav-header').text('Cập nhật tồn kho')
 }
 function fillSellout(id) {
 
@@ -963,26 +993,32 @@ function fillSellout(id) {
 
 	$('#resetFormSellout').hide()
   $('#deleteSellout').show()
+  $('.page.sellout .nav-header').text('Cập nhật doanh số')
 }
 function syncUp() {
 	var defCus 	= $.Deferred()
 	var defInv	= $.Deferred()
 	var defSel  = $.Deferred()
+	var countToDetectLostInternet = 0
+	var countBeforeSync = countData()
 	var errorMsg = ''
 	$("#statusText").text("Đang tải lên ...")
 	showWait()
 	$.when(defCus, defInv, defSel).then(function(){
 		hideWait()
 		if (errorMsg !== "") {
-			errorMsg += " Kiểm tra dữ liệu chưa đồng bộ."
+			errorMsg += "Số dữ liệu đã tải lên: "+ countData() +"/"+countBeforeSync
 		} else {
-			errorMsg  = "Tải lên thành công!"
+			errorMsg  = "Số dữ liệu đã tải lên: "+ countBeforeSync+"/"+countBeforeSync
 		}
 		$("#statusText").text(errorMsg)
+		if (countToDetectLostInternet == 3) {			
+			$("#statusText").text("Không có kết nối Internet!")
+		}
 	})
 	$.ajax({
     url: DOMAIN+'/SyncUpNewUserController',
-    data: JSON.stringify({newuserrequest:CUSTOMERS}),
+    data: JSON.stringify({newuserrequest:CUSTOMERS.items('usersysid', USER.sysid)}),
     method: 'POST',
     processData: false,
     contentType: 'application/json',
@@ -1000,11 +1036,12 @@ function syncUp() {
     		}
     	}
     	if (flagErr == 1) {
-    		errorMsg += 'Up khách hàng có lỗi. '
+    		errorMsg = 'Có lỗi. '
     	} 
     	localStorage.customers = JSON.stringify(CUSTOMERS)
 		},
 		error: function(xhr, status, error) {
+			++countToDetectLostInternet
 			console.log(status)
 		}, 
 		complete: function() {
@@ -1013,7 +1050,7 @@ function syncUp() {
 	});
 	$.ajax({
     url: DOMAIN+'/SyncUpInventoryController',
-    data: JSON.stringify({inventoryrequest:INVENTORY}),
+    data: JSON.stringify({inventoryrequest:INVENTORY.items('usersysid', USER.sysid)}),
     method: 'POST',
     processData: false,
     contentType: 'application/json',
@@ -1031,11 +1068,12 @@ function syncUp() {
     		}
     	}
     	if (flagErr == 1) {
-    		errorMsg += "Up tồn kho có lỗi. "
+    		errorMsg = 'Có lỗi. '
     	}
     	localStorage.inventory = JSON.stringify(INVENTORY)
 		},
 		error: function(xhr, status, error) {
+			++countToDetectLostInternet
 			console.log(status)
 		}, 
 		complete: function() {
@@ -1044,7 +1082,7 @@ function syncUp() {
 	});	
 	$.ajax({
     url: DOMAIN+'/SyncUpSelloutController',
-    data: JSON.stringify({selloutrequest:SELLOUT}),
+    data: JSON.stringify({selloutrequest:SELLOUT.items('usersysid', USER.sysid)}),
     method: 'POST',
     processData: false,
     contentType: 'application/json',
@@ -1062,15 +1100,51 @@ function syncUp() {
     		}
     	}
     	if (flagErr == 1) {
-    		errorMsg += "Up danh số có lỗi."
+    		errorMsg = 'Có lỗi. '
     	}
     	localStorage.SELLOUT = JSON.stringify(SELLOUT)
 		},
 		error: function(xhr, status, error) {
+			++countToDetectLostInternet			
 			console.log(status)
 		}, 
 		complete: function() {
     	defSel.resolve()
 		}
 	});	
+}
+function checkAuthentication(callback) {
+	$.ajax({
+    url: DOMAIN+'/LoginValidationForSyncController',
+    data: JSON.stringify({
+			userid: USER.userid,
+			password: USER.password
+		}),
+    method: 'POST',
+    processData: false,
+    contentType: 'application/json',
+    crossDomain:true,
+    success: function(data, status, xhr) {
+    	var obj = JSON.parse(data)
+    	if (obj.responsecode == '001') {
+    		callback()
+    	} else {
+				$('#statusText').text('Thông tin đăng nhập đã thay đổi trên hệ thống. Vui lòng đăng xuất ứng dụng và đăng nhập lại.')
+    	}
+		},
+		error: function(xhr, status, error) {
+			$('#statusText').text('Không có kết nối Internet')
+			console.log(status)
+		}
+	});	
+}
+function updateFeature() {
+	$(ALL_ROLE.map(function(i){
+		return '.ROLE_'+i
+	}).join(',')).hide()
+	if (null !== USER) {
+		$(USER.funcs.map(function(i){
+			return '.ROLE_'+i
+		}).join(',')).show()
+	}
 }

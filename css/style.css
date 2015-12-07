@@ -272,6 +272,9 @@ table {
 .col-right {
 	width: 20%;
 }
+#addInventory, #addSellout {
+  margin-bottom: 50px;
+}
 
 /*PAGE CLIENT DATA*/
 .clientdata h3 {
@@ -303,13 +306,14 @@ table {
 .clientdata .row i.fa{
     float: right;
     margin: 10px;
+    font-size: 24px;
 }
 .clientdata h3 i.fa {
 	float:right;
 }
 
 /*iPhone 4*/
-@media only screen and (min-device-width : 320px) and (max-device-width : 480px) and (orientation : portrait) {
+@media only screen and (max-device-width : 320px) and (max-device-width : 480px) and (orientation : portrait) {
   div.username {
     display: block;
     width: 220px;

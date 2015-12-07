@@ -32,22 +32,21 @@
 			<div class="logout"><a id="btnLogout">Đăng xuất</a></div>
 		</nav>
 		<div class="container">
-			<h5>Chọn màn hình:</h5>
-			<div id="btnAddUser" class="btnBig">
+			<div id="btnAddUser" class="ROLE_CAPTRNEWUSER btnBig">
 				<div class="overlay"></div>
-				<div class="btn-text">Thêm Khách Hàng</div>
+				<div class="btn-text">Nhập Khách Hàng Mới</div>
 			</div>
-			<div id="btnInventory" class="btnBig">
+			<div id="btnInventory" class="ROLE_CAPTRINVENTORY btnBig">
 				<div class="overlay"></div>
 				<div class="btn-text">Thống Kê Tồn Kho</div>
 			</div>
-			<div id="btnSellout" class="btnBig">
+			<div id="btnSellout" class="ROLE_CAPTRPGSELLOUT btnBig">
 				<div class="overlay"></div>
 				<div class="btn-text">Thống Kê Doanh Số</div>
 			</div>
 			<div id="btnClientData" class="btnBig">
 				<div class="overlay"></div>
-				<div class="btn-text">Dữ liệu chưa đồng bộ</div>
+				<div class="btn-text">Dữ Liệu Chưa Tải Lên</div>
 			</div>
 		</div>
 		<div class="footer">
@@ -70,8 +69,8 @@
 				<div class="alert hidden"></div>
 				<input type="hidden" name="clientid">
 				<select name="outletid"></select>
-				<input type="text" name="familyName" placeholder="Họ">
-				<input type="text" name="givenName" placeholder="Tên">
+				<input type="text" name="familyName" placeholder="Họ khách hàng">
+				<input type="text" name="givenName" placeholder="Tên khách hàng">
 				<input type="text" name="unit" placeholder="Số nhà">
 				<input type="text" name="street" placeholder="Đường">
 				<input type="text" name="ward" placeholder="Phường/Xã">
@@ -189,17 +188,25 @@
 		</nav>
 		<div class="clearfix"></div>
 		<div class="container">
-			<h3><i class="animate fa fa-angle-up"></i> Danh sách khách hàng</h3>
-			<div class="list" id="listCustomer">				
+			<h3 class="ROLE_CAPTRNEWUSER">
+				<i class="animate fa fa-angle-up"></i> <span>Danh sách khách hàng</span>
+			</h3>
+			<div class="ROLE_CAPTRNEWUSER list" id="listCustomer">				
 			</div>
-			<h3><i class="animate fa fa-angle-up"></i> Danh sách tồn kho</h3>
-			<div class="list" id="listInventory"></div>
-			<h3><i class="animate fa fa-angle-up"></i> Danh sách doanh số</h3>
-			<div class="list" id="listSellout"></div>
+
+			<h3 class="ROLE_CAPTRINVENTORY">
+				<i class="animate fa fa-angle-up"></i> <span>Danh sách tồn kho</span>
+			</h3>
+			<div class="ROLE_CAPTRINVENTORY list" id="listInventory"></div>
+			
+			<h3 class="ROLE_CAPTRPGSELLOUT">
+				<i class="animate fa fa-angle-up"></i> <span>Danh sách doanh số</span>
+			</h3>
+			<div class="ROLE_CAPTRPGSELLOUT list" id="listSellout"></div>
 		</div>
 	</div><!-- END PAGE CLIENTDATA -->
 
-	<script type="text/javascript" src="cordova.js"></script>
+	<!-- <script type="text/javascript" src="cordova.js"></script> -->
 	<script type="text/javascript" src="js/jquery-2.1.4.min.js"></script>
 	<script type="text/javascript" src="js/fastclick.js"></script>
 	<script type="text/javascript" src="js/data.js"></script>
