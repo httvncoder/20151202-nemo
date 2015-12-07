@@ -24,6 +24,25 @@ var ABBOTT_PRODUCTS = [];
 
 var NEMO_PRODUCTS = [];
 
+var DOMAIN = "http://nemoapp.3anutrition.com:8088/NEMOApp";
+
+var ERROR_CODE = {
+    "001": "Validation passed",
+    "990": "Mã người dùng không đúng",
+    "991": "Mật khẩu không đúng",
+    "992": "Tài khoản đã ngưng kích hoạt",
+    "993": "Tài khoản chưa được kích hoạt",
+    "994": "Tài khoản đã bị khóa",
+    "995": "Mật khẩu đã hết hạn",
+    "100": "Không thể kết nối tới máy chủ",
+    "101": "Lưu không thành công",
+    "102": "Dữ liệu không đúng định dạng, kiểm tra lại form.",
+    "002": "Lưu thành công"
+}
+var ALL_ROLE = ['CAPTRNEWUSER', 'CAPTRINVENTORY', 'CAPTRPGSELLOUT']
+
+var USER = null;
+
 function initOnlineData() {
     if( !isLSEmpty('provinces') ) {
         PROVINCES = JSON.parse(localStorage.provinces)
@@ -51,6 +70,10 @@ function initOnlineData() {
     }
 }
 function initLocalData() {
+    if( !isLSEmpty('domain') ) {
+        DOMAIN = localStorage.domain
+        console.log('Load domain: '+DOMAIN)
+    }
     if( !isLSEmpty('customers') ) {
         CUSTOMERS = JSON.parse(localStorage.customers)
         console.log('Load customers.')
@@ -62,7 +85,7 @@ function initLocalData() {
     if( !isLSEmpty('sellout') ) {
         SELLOUT = JSON.parse(localStorage.sellout)
         console.log('Load sellout.')
-    }
+    }    
 }
 function isLSEmpty(key) {
     if(typeof localStorage[key] == 'undefined' || localStorage[key] == '')

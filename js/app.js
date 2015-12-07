@@ -6,23 +6,8 @@
  * @company Cherry Vietnam
  */
 
-var DOMAIN = "http://nemoapp.3anutrition.com:8088/NEMOApp";
-var ERROR_CODE = {
-	"001": "Validation passed",
-	"990": "Mã người dùng không đúng",
-	"991": "Mật khẩu không đúng",
-	"992": "Tài khoản đã ngưng kích hoạt",
-	"993": "Tài khoản chưa được kích hoạt",
-	"994": "Tài khoản đã bị khóa",
-	"995": "Mật khẩu đã hết hạn",
-	"100": "Không thể kết nối tới máy chủ",
-	"101": "Lưu không thành công",
-	"102": "Dữ liệu không đúng định dạng, kiểm tra lại form.",
-	"002": "Lưu thành công"
-}
-var ALL_ROLE = ['CAPTRNEWUSER', 'CAPTRINVENTORY', 'CAPTRPGSELLOUT']
-var USER = null;
 var previousPage = ''
+
 var deviceReadyDeferred = $.Deferred();
 var jqmReadyDeferred = $.Deferred();
 
@@ -58,6 +43,8 @@ function init() {
 		}
 	})
 	initLocalData()
+
+	// page LOGIN
 	$('#btnLogin').click(function(){
 		doLogin()
 		return false
@@ -72,6 +59,16 @@ function init() {
 	})
 	$('#downloadData').click(function(){
 		syncDown()
+	})
+	
+	// page SETTING
+	$('#btnSetting').click(function(){
+		renderPageSetting()
+		gotoPage('setting')
+	})
+	$('#submitFormSetting').click(function(){
+		saveSetting()
+		return false
 	})
 
 	//page home 
@@ -298,6 +295,8 @@ function doLogin() {
 	return false;
 }
 function doLogout() {
+	USER = null
+	localStorage.removeItem('user')
 	gotoPage('login')
 	$('#username').val('')
 	$('#password').val('')
@@ -1146,5 +1145,21 @@ function updateFeature() {
 		$(USER.funcs.map(function(i){
 			return '.ROLE_'+i
 		}).join(',')).show()
+	}
+}
+
+function renderPageSetting() {
+	formSet('input', 'domain', DOMAIN,'#setting')
+}
+function saveSetting() {
+	var url = formGet('input', 'domain', '#setting')
+	var pattern = new RegExp(/(((http|https):\/\/))(\w+:{0,1}\w*@)?(\S+)(:[0-9]+)?(\/|\/([\w#!:.?+=&%@!\-\/]))?/);
+	if ( !pattern.test(url) ) {
+		showError('Domain ứng dụng sai định dạng.')
+	} else {
+		DOMAIN = url
+		localStorage.setItem('domain', DOMAIN)
+		$('.setting .alert').hide()
+		gotoPage('login')
 	}
 }

@@ -61,6 +61,16 @@ html, body {
 .logo img {
   width: 50%;
 }
+.padding-md {
+  padding: 50px 0px;
+}
+.text-center {
+  text-align: center;
+}
+a#btnSetting {
+  color: inherit;
+}
+/******* FORM *******/
 form {
   display: block;
   width: 90%;
@@ -129,8 +139,6 @@ form .fixedControl {
 	width: calc(50% - 20px);
 	margin-right: 10px;
 }
-
-.text-center {text-align: center;}
 
 .padding {
 	width: 96%;

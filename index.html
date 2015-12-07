@@ -23,8 +23,29 @@
 			<input type="text" id="username" placeholder="Mã người dùng">
 			<input type="password" id="password" placeholder="Mật khẩu">			
 			<button class="btn btn-primary btn-full-width" id="btnLogin">ĐĂNG NHẬP</button>
+			<div class="row padding-md text-center">
+				<a href="#" id="btnSetting">Các thiết lập</a>
+			</div>
 		</form>
 	</div><!-- END PAGE LOGIN -->
+
+	<div class="page setting">
+		<nav class="top-nav">
+			<div class="nav-btn btn-back" onclick="gotoPage('login');"><i class="fa fa-chevron-left"></i> Trở lại</div>
+			<div class="nav-header">
+				Thiết lập
+			</div>
+		</nav>
+		<div class="container">
+			<form id="setting">
+				<div class="alert hidden"></div>
+				<input type="text" name="domain" placeholder="App's domain http://www.example.com/...">
+				<div class="form-group text-center">
+					<button type="submit" class="btn btn-primary btn-half" id="submitFormSetting">Lưu</button>
+				</div>
+			</form>
+		</div>
+	</div>
 	
 	<div class="page home">
 		<nav class="top-nav">
