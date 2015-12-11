@@ -69,6 +69,7 @@ html, body {
 }
 a#btnSetting {
   text-decoration: none;
+  color: #3498DB;
 }
 /******* FORM *******/
 form {

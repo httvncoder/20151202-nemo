@@ -201,7 +201,7 @@ function vnDate(val) {
 }
 
 function deleteRecord(id, data) {
-    var a = window.confirm('Bạn có chắc chắn muốn xóa record này?')
+    var a = window.confirm('Bạn có chắc chắn muốn xóa bản ghi này?')
     if (!a) 
         return
     var result = window[data].removeAt('clientid', id)
