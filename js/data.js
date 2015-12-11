@@ -205,9 +205,12 @@ function deleteRecord(id, data) {
     if (!a) 
         return
     var result = window[data].removeAt('clientid', id)
-    if (result == true) {
+    if (result == true) {        
         localStorage[data.toLowerCase()] = JSON.stringify(window[data])
         $('div.row[data-id="'+id+'"]').remove()
+        $('h3.ROLE_CAPTRNEWUSER span').text(' Danh sách khách hàng ('+CUSTOMERS.items('usersysid', USER.sysid).length+')')
+        $('h3.ROLE_CAPTRINVENTORY span').text(' Danh sách tồn kho ('+INVENTORY.items('usersysid', USER.sysid).length+')')
+        $('h3.ROLE_CAPTRPGSELLOUT span').text(' Danh sách doanh số ('+SELLOUT.items('usersysid', USER.sysid).length+')')
     }
 }
 function checkDate(strDate) {

@@ -126,7 +126,7 @@ function init() {
 			renderPageClientData()
 			gotoPage('clientdata')
 		} else {
-			showError('Không thể xóa dữ liệu này!')
+			showError('Không thể xóa dữ liệu này')
 		}
 		return false
 	})
@@ -159,7 +159,7 @@ function init() {
 			renderPageClientData()
 			gotoPage('clientdata')
 		} else {
-			showError('Không thể xóa dữ liệu này!')
+			showError('Không thể xóa dữ liệu này')
 		}
 		return false
 	})
@@ -198,7 +198,7 @@ function init() {
 			renderPageClientData()
 			gotoPage('clientdata')
 		} else {
-			showError('Không thể xóa dữ liệu này!')
+			showError('Không thể xóa dữ liệu này')
 		}
 		return false
 	})
@@ -518,15 +518,15 @@ function syncDown() {
 		hideWait()
 		initOnlineData()
 		if (isDataReady()) {
-			$("#statusText").text("Tải xuống thành công!")
+			$("#statusText").text("Tải xuống thành công")
 		} else {
-			$("#statusText").html("Dữ liệu chưa sẵn sàng!")
+			$("#statusText").html("Dữ liệu chưa sẵn sàng")
 		} 
 
 		// Đếm số lượng defferred, đủ 6 cái ajax đều error thì chắc là mất kết nối rồi
 		if (countToDetectLostInternet == 6) {
 			countToDetectLostInternet = 0
-			$("#statusText").html("Không có kết nối Internet!")	
+			$("#statusText").html("Không có kết nối Internet")	
 		}
 	})
 	$.ajax({
@@ -1059,7 +1059,7 @@ function syncUp() {
 		}
 		$("#statusText").text(errorMsg)
 		if (countToDetectLostInternet == 3) {			
-			$("#statusText").text("Không có kết nối Internet!")
+			$("#statusText").text("Không có kết nối Internet")
 		}
 	})
 	$.ajax({
