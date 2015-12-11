@@ -68,7 +68,7 @@ html, body {
   text-align: center;
 }
 a#btnSetting {
-  color: inherit;
+  text-decoration: none;
 }
 /******* FORM *******/
 form {
@@ -271,17 +271,18 @@ form .fixedControl {
 }
 
 /*PAGE INVENTORY*/
-table {
+.form-group table {
 	width: 100%;
+  border-collapse: collapse;
+}
+.form-group table tr {
+  border-bottom: 1px white solid;
 }
 .col-left {
 	width: 80%;
 }
 .col-right {
 	width: 20%;
-}
-#addInventory, #addSellout {
-  margin-bottom: 50px;
 }
 
 /*PAGE CLIENT DATA*/

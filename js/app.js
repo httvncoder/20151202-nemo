@@ -21,15 +21,13 @@ $(document).ready(function () {
   jqmReadyDeferred.resolve();
 });
 
-$.when(jqmReadyDeferred, deviceReadyDeferred).then(init);
+$.when(jqmReadyDeferred).then(init);
 
 function init() {
 	FastClick.attach(document.body)	
-	gotoPage('login')
-	updateStatus()
+	gotoPage('login')	
 	if (typeof localStorage.user != 'undefined') {
 		USER = JSON.parse(localStorage.user)
-		syncDown()
 		updateFeature()
 		gotoPage('home')
 		$('div.username').text(USER.name)
@@ -42,7 +40,9 @@ function init() {
 			gotoPage('home')			
 		}
 	})
+	initOnlineData()
 	initLocalData()
+	updateStatus()
 
 	// page LOGIN
 	$('#btnLogin').click(function(){
@@ -65,6 +65,7 @@ function init() {
 	$('#btnSetting').click(function(){
 		renderPageSetting()
 		gotoPage('setting')
+		return false
 	})
 	$('#submitFormSetting').click(function(){
 		saveSetting()
@@ -85,8 +86,8 @@ function init() {
 		renderPageSellout()
 	})
 	$('#btnClientData').click(function(){
-		gotoPage('clientdata')
 		renderPageClientData()
+		gotoPage('clientdata')
 	})
 
 	//Page add customer
@@ -108,15 +109,11 @@ function init() {
 				gotoPage('clientdata')
 			} else {
 				resetForm('#addUser', false)
-				gotoPage('home')
 			}
 		}
 		return false
 	})
-	$('#addUser').submit(function(){
-		//$('#submitFormUser').click()
-		return false
-	})
+
 	$('#deleteUser').click(function(){
 		if ( !window.confirm('Bạn chắc chắn muốn xóa bản ghi này?') ) {
 			return false
@@ -141,9 +138,12 @@ function init() {
 	})
 	$('#submitFormInventory').click(function(){
 		if (createReportInventory()) {
-			updateStatus()
+			var clientid = formGet('input','clientid', '#addInventory')
 			resetForm('#addInventory', false)
-			gotoPage('home')
+			if (clientid) {
+				renderPageClientData()
+				gotoPage('clientdata')
+			} 
 		}
 		return false
 	})
@@ -164,18 +164,11 @@ function init() {
 		return false
 	})
 	$('#addInventory select[name="outletid"], select[name="inv_date"]').change(function(){
-		var day = getDate('#addInventory','inventory')
-		var filter1 = INVENTORY.items('cycledate',day)
-		if (null == filter1)
-			return
-		var filter2 = filter1.item('outletid', $('#addInventory select[name="outletid"]').val())
-		if (null == filter2)
-			return
-		formSet('input', 'clientid', filter2.clientid, '#addInventory')
-		fillTableData(filter2.inventory, '#addInventory')
-		showError('Thống kê này đã có sẵn. Khi lưu sẽ ghi đè lên dữ liệu cũ.')
-		$('#deleteInventory').show()
-		$('#resetFormInventory').hide()
+		var day = formGet('select', 'inv_date', '#addInventory')
+		var outlet = formGet('select', 'outletid', '#addInventory')
+		if (checkDuplicate(day, outlet, INVENTORY)) {
+			showError('Thống kê này đã có sẵn')
+		}
 	})
 	// page sellout
 	$('#resetFormSellout').click(function(){
@@ -184,9 +177,12 @@ function init() {
 	})
 	$('#submitFormSellout').click(function(){
 		if (createReportSellout()) {
-			updateStatus()
+			var clientid = formGet('input', 'clientid','#addSellout')
 			resetForm('#addSellout', false)
-			gotoPage('home')
+			if (clientid) {
+				renderPageClientData()
+				gotoPage('clientdata')				
+			}
 		}
 		return false
 	})
@@ -208,17 +204,10 @@ function init() {
 	})
 	$('#addSellout select[name="outletid"], select[name="selloutD"], select[name="selloutM"], select[name="selloutY"]').change(function(){
 		var day = getDate('#addSellout','sellout')
-		var filter1 = SELLOUT.items('cycledate',day)
-		if (null == filter1)
-			return
-		var filter2 = filter1.item('outletid', $('#addSellout select[name="outletid"]').val())
-		if (null == filter2)
-			return
-		formSet('input', 'clientid', filter2.clientid, '#addSellout')
-		fillTableData(filter2.sellout, '#addSellout')
-		showError('Thống kê này đã có sẵn. Khi lưu sẽ ghi đè lên dữ liệu cũ.')
-		$('#deleteSellout').show()
-		$('#resetFormSellout').hide()
+		var outlet = formGet('select', 'outletid', '#addSellout')
+		if (checkDuplicate(day, outlet, SELLOUT)) {
+			showError('Thống kê này đã có sẵn')
+		}
 	})
 
 	// Page clientdata
@@ -232,6 +221,19 @@ function init() {
 		$(this).next().toggle()
 	})
 } // END INIT FUNCTION
+
+function checkDuplicate(day, outletid, data) {
+	var filter1 = data.items('cycledate',day)		
+	if (0 == filter1.length)
+		return false
+	var filterPersonalData = filter1.items('usersysid', USER.sysid)
+	if (0 == filterPersonalData.length)
+		return false
+	var filter2 = filterPersonalData.item('outletid', outletid)
+	if (null == filter2)
+		return false
+	return true
+}
 
 function showWait() {
 	$('.page.activePage').append('<div class="overlay"><div class="waiting"><i class="fa fa-spinner fa-pulse"></i></div></div>')
@@ -257,12 +259,25 @@ function countData() {
 
 function doLogin() {
 	console.log('Login now')
+	var username = $('#username').val()
+	var password = $('#password').val()
+	var validateLogin = ''
+	if ('' == $.trim(username) ) {
+		validateLogin += '● Nhập mã người dùng <br/>'
+	}
+	if ('' == $.trim(password) ) {
+		validateLogin += '● Nhập mật khẩu <br/>'
+	}
+	if ('' != validateLogin) {
+		showError(validateLogin)
+		return
+	}
 	showWait()
 	$.ajax({
     url: DOMAIN+'/LoginValidationController',
     data: JSON.stringify({
-			userid: $('#username').val(),
-			password: $('#password').val()
+			userid: username,
+			password: password
 		}),
     method: 'POST',
     processData: false,
@@ -286,7 +301,7 @@ function doLogin() {
 		},
 		error: function(xhr, status, error) {
 			console.log(status)
-			showError("Không có kết nối Internet")
+			showError("Không thể kết nối tới máy chủ")
 		},
 		complete: function() {
 			hideWait()
@@ -315,7 +330,9 @@ function showError(text) {
 	$('.activePage .alert').show()
 	$('html,body').scrollTop(0)
 }
-
+function hideError(page) {
+	$('.page.'+page+' .alert').hide()
+}
 function renderOptions(ele, data, val, text, hint, defaultVal) {
 	if (typeof defaultVal == 'undefined')
 		defaultVal = ''
@@ -365,21 +382,28 @@ function renderPageCustomer() {
 
 	$('#resetFormUser').show()
 	$('#deleteUser').hide()
-  $('.page.customer .nav-header').text('Thêm khách hàng')		
+  $('.page.customer .nav-header').text('Thêm khách hàng')	
+  hideError('customer')	
 }
 function renderPageInventory() {
+	$('.page.inventory .alert').hide()
 	renderOptions('#addInventory select[name="outletid"]', OUTLETS, 'id', 'name', '<option value="">Chọn cửa hàng</option>');	
   renderOptions('select[name="inv_date"]',INV_DATE, 'cycledate','desc','<option value="">Ngày thống kê</option>')  
 
+  $('#addInventory select[name="outletid"]').removeAttr('disabled')
+	$('#addInventory select[name="inv_date"]').removeAttr('disabled')
+
   //render data table
-  if (!$('#addInventory').hasClass('isRendering')) {
-  	renderTableData('#addInventory table tbody', NEMO_PRODUCTS.sort(compareNemo), 'id', 'name')  	
-  	$('#addInventory').addClass('isRendering')
-  }
+	if (INV_DATE.length > 0) {
+		renderTableData('#addInventory table tbody', NEMO_PRODUCTS.sort(compareNemo), 'id', 'name')  	  		
+	} else {
+		$('#addInventory table tbody').html('')
+	}
   resetForm('#addInventory', false)
   $('#resetFormInventory').show()
   $('#deleteInventory').hide()
   $('.page.inventory .nav-header').text('Thống kê tồn kho')
+  hideError('inventory')
 }
 
 function renderPageSellout() {
@@ -389,16 +413,19 @@ function renderPageSellout() {
   renderSingleOptions('select[name="selloutM"]',range(1,12),'<option value="">Tháng</option>')
   renderSingleOptions('select[name="selloutY"]',range((new Date()).getFullYear() - 1, (new Date()).getFullYear() + 1).reverse(),'<option value="">Năm</option>')
 
+  $('#addSellout select[name="outletid"]').removeAttr('disabled')
+  $('select[name="selloutD"]').removeAttr('disabled')
+  $('select[name="selloutM"]').removeAttr('disabled')
+  $('select[name="selloutY"]').removeAttr('disabled')
+
   //render data table
-  if (!$('#addSellout').hasClass('isRendering')) {
-  	renderTableData('#addSellout table tbody', NEMO_PRODUCTS.sort(compareNemo), 'id', 'name')
-  	$('#addSellout').addClass('isRendering')
-	}
+	renderTableData('#addSellout table tbody', NEMO_PRODUCTS.sort(compareNemo), 'id', 'name')
 
 	resetForm('#addSellout', false)
 	$('#resetFormSellout').show()
   $('#deleteSellout').hide()
   $('.page.sellout .nav-header').text('Thống kê doanh số')
+  hideError('sellout')
 
 }
 function renderPageClientData() {
@@ -455,11 +482,12 @@ function renderTableData(selector, data, idLabel, displayLabel) {
 		rows += '<tr>'
 		rows += '<td class="col-left">'+data[i][displayLabel]+'</td>'
 		rows += '<td class="col-right">'
-		rows += '	<input type="number" class="inv-product" data-id="'+data[i][idLabel]+'" value="">'
+		rows += '	<input type="text" class="inv-product" data-id="'+data[i][idLabel]+'" value="">'
 		rows += '</td>'
 		rows += '</tr>'
 	}
-	$(selector).append(rows)
+	rows = '<tr><th class="col-left">Sản phẩm</th><th class="col-right">Số lon</th></tr>' + rows
+	$(selector).html(rows)
 }
 function resetForm(selector, doConfirm) {
 	if (typeof doConfirm == 'undefined') {
@@ -493,7 +521,7 @@ function syncDown() {
 			$("#statusText").text("Tải xuống thành công!")
 		} else {
 			$("#statusText").html("Dữ liệu chưa sẵn sàng!")
-		}
+		} 
 
 		// Đếm số lượng defferred, đủ 6 cái ajax đều error thì chắc là mất kết nối rồi
 		if (countToDetectLostInternet == 6) {
@@ -595,11 +623,8 @@ function syncDown() {
     success: function(data, status, xhr) {
     	var obj = JSON.parse(data)
     	NEMO_PRODUCTS = obj.nemoproduct
+    	NEMO_PRODUCTS.sort(compareNemo)
     	localStorage.nemo_products = JSON.stringify(NEMO_PRODUCTS)
-    	
-    	//remove để làm mới danh sách trên giao diện
-    	$('#addInventory').removeClass('isRendering')    	
-    	$('#addSellout').removeClass('isRendering')    	
 		},
 		error: function(xhr, status, error) {
 			++countToDetectLostInternet
@@ -741,16 +766,16 @@ function validateCustomer(data) {
 
 	var dob = data.dob
 	if (dob != '' && dob.length < 8) {
-		valid.message += "<br/>● Ngày sinh chưa nhập chính xác. "
+		valid.message += "<br/>● Ngày sinh chưa nhập chính xác"
 	}
 	if ('' === prevPowder && '' === prevLiqid) {
-		valid.message += "<br/>● Chưa chọn loại sữa trước đây."
+		valid.message += "<br/>● Chưa chọn loại sữa trước đây"
 	}		
 	if (null === powder && null === liqid) {
-		valid.message += "<br/>● Chưa chọn loại sữa hiện tại. "
+		valid.message += "<br/>● Chưa chọn loại sữa hiện tại"
 	} else {
 		if ( (isManProduct(powder) || isManProduct(liqid)) && dob=="" ) {
-			valid.message += "<br/>● Ngày sinh bắt buộc nhập. "
+			valid.message += "<br/>● Ngày sinh bắt buộc nhập"
 		}
 		if ( !isFutProduct(powder) && !isFutProduct(liqid) && dob != '') {
 			var d = new Date();
@@ -759,7 +784,10 @@ function validateCustomer(data) {
 			d.setYear(formGet('select', 'DOB_Y'))
 			var currentDate = new Date()
 			if (d > currentDate) 
-				valid.message += "<br/>● Ngày sinh không thể trong tương lai. "
+				valid.message += "<br/>● Ngày sinh không thể trong tương lai"
+			else if(!checkDate(getDOB())) {
+				valid.message += "<br/>● Ngày sinh không đúng"
+			}
 		}
 	}
 
@@ -785,19 +813,23 @@ function isFutProduct(p) {
 }
 function validateInventory(data) {
 	var valid = {message:''}
+	var clientid = formGet('input','clientid','#addInventory')
+	if (checkDuplicate(data.cycledate, data.outletid, INVENTORY) && clientid == '') {
+		valid.message += '<br/>● Thống kê này đã có sẵn'
+	}
 	if (data.inventory.length == 0)
-		valid.message += "<br/>● Chưa nhập số lượng. "
+		valid.message += "<br/>● Chưa nhập số lượng"
 	if (data.outletid == '') {
-		valid.message += "<br/>● Chưa chọn cửa hàng."
+		valid.message += "<br/>● Chưa chọn cửa hàng"
 	}
 	if (data.cycledate == '' || data.cycledate.length < 8){
-		valid.message += "<br/>● Chưa chọn đúng ngày thống kê."
+		valid.message += "<br/>● Chưa chọn đúng ngày thống kê"
 	} 
 
 	var isNumberError = 0
 	$('input.inv-product.alert').removeClass('alert')
 	for(var i = 0; i < data.inventory.length; i++) {
-		if (data.inventory[i].qty != parseInt(data.inventory[i].qty, 10)){
+		if (data.inventory[i].qty != parseInt(data.inventory[i].qty, 10) || data.inventory[i].qty <= 0){
 			if (isNumberError == 0)
 				valid.message += "<br/>● Số lượng chưa đúng"
 			var eleError = $('input.inv-product[data-id="'+data.inventory[i].productid+'"]')
@@ -813,16 +845,20 @@ function validateInventory(data) {
 
 function validateSellout(data) {
 	var valid = {message:''}
+	var clientid = formGet('input','clientid','#addSellout')
+	if (checkDuplicate(data.cycledate, data.outletid, SELLOUT) && clientid == '') {
+		valid.message += '<br/>● Thống kê này đã có sẵn'
+	}
 	if (data.sellout.length == 0)
-		valid.message += "<br/>● Chưa nhập số lượng. "
+		valid.message += "<br/>● Chưa nhập số lượng"
 	if (data.outletid == '') {
-		valid.message += "<br/>● Chưa chọn ngày thống kê."
+		valid.message += "<br/>● Chưa chọn cửa hàng"
 	}
 	if (data.cycledate == '' || data.cycledate.length < 8){
-		valid.message += "<br/>● Chưa chọn ngày thống kê."
+		valid.message += "<br/>● Chưa chọn ngày thống kê"
 	} else {
 		if (!checkDate(data.cycledate)) {
-			valid.message += "<br/>● Chọn sai ngày thống kê."
+			valid.message += "<br/>● Chọn sai ngày thống kê"
 		}
 		var d = new Date();
 		d.setDate(date2d(data.cycledate))
@@ -837,7 +873,7 @@ function validateSellout(data) {
 	var isNumberError = 0
 	$('input.inv-product.alert').removeClass('alert')
 	for(var i = 0; i < data.sellout.length; i++) {
-		if (data.sellout[i].qty != parseInt(data.sellout[i].qty, 10)){
+		if (data.sellout[i].qty != parseInt(data.sellout[i].qty, 10) || data.sellout[i].qty <= 0){
 			if (isNumberError == 0)
 				valid.message += "<br/>● Số lượng chưa đúng"
 			var eleError = $('input.inv-product[data-id="'+data.sellout[i].productid+'"]')
@@ -935,16 +971,17 @@ function fillFormCustomer(id) {
   var comLiquidMilk = COMPETITOR_PRODUCTS.filter(function(obj){return obj.type == 'L'})
   var abbPowderMilk = ABBOTT_PRODUCTS.filter(function(obj){return obj.type == 'P'})
   var abbLiquidMilk = ABBOTT_PRODUCTS.filter(function(obj){return obj.type == 'L'})
-	renderOptions('select[name="compowderproduct"]', [{id:'', name:'Chọn sữa bột'}].concat(comPowderMilk), 'id', 'name', '<option>Chọn sữa bột</option>',obj.compowderproduct);
-	renderOptions('select[name="comliquidproduct"]', [{id:'', name:'Chọn sữa nước'}].concat(comLiquidMilk), 'id', 'name', '<option>Chọn sữa nước</option>',obj.comliquidproduct);
-	renderOptions('select[name="abbpowderproduct"]', [{id:'', name:'Chọn sữa bột'}].concat(abbPowderMilk), 'id', 'name', '<option>Chọn sữa bột</option>',obj.abbpowderproduct);
-	renderOptions('select[name="abbliquidproduct"]', [{id:'', name:'Chọn sữa nước'}].concat(abbLiquidMilk), 'id', 'name', '<option>Chọn sữa nước</option>',obj.abbliquidproduct);
+	renderOptions('select[name="compowderproduct"]', comPowderMilk, 'id', 'name', '<option>Chọn sữa bột</option>',obj.compowderproduct);
+	renderOptions('select[name="comliquidproduct"]', comLiquidMilk, 'id', 'name', '<option>Chọn sữa nước</option>',obj.comliquidproduct);
+	renderOptions('select[name="abbpowderproduct"]', abbPowderMilk, 'id', 'name', '<option>Chọn sữa bột</option>',obj.abbpowderproduct);
+	renderOptions('select[name="abbliquidproduct"]', abbLiquidMilk, 'id', 'name', '<option>Chọn sữa nước</option>',obj.abbliquidproduct);
 
 	formSet('input', 'clientid', obj.clientid)
 
 	$('#resetFormUser').hide()
 	$('#deleteUser').show()
   $('.page.customer .nav-header').text('Cập nhật khách hàng')	
+  hideError('customer')
 }
 
 function fillTableData(data, formSelector) {
@@ -956,14 +993,19 @@ function fillTableData(data, formSelector) {
 function fillInventory(id) {
 	obj = INVENTORY.item('clientid', id)
 
-	renderOptions('#addInventory select[name="outletid"]', OUTLETS, 'id', 'name', '<option value="">Chọn cửa hàng</option>', obj.outletid);
-	renderOptions('select[name="inv_date"]',INV_DATE, 'cycledate','desc','<option value="">Ngày thống kê</option>', obj.cycledate)  
+	renderOptions('#addInventory select[name="outletid"]', OUTLETS.items('id',obj.outletid), 'id', 'name', '<option value="">Chọn cửa hàng</option>', obj.outletid);
+	renderOptions('#addInventory select[name="inv_date"]',INV_DATE.items('cycledate', obj.cycledate), 'cycledate','desc','<option value="">Ngày thống kê</option>', obj.cycledate)  
+
+	//disable
+	$('#addInventory select[name="outletid"]').attr('disabled','disabled')
+	$('#addInventory select[name="inv_date"]').attr('disabled','disabled')
 
   //render data table
-  if (!$('#addInventory').hasClass('isRendering')) {
-  	renderTableData('#addInventory table tbody', NEMO_PRODUCTS.sort(compareNemo), 'id', 'name')  	
-  	$('#addInventory').addClass('isRendering')
-  }
+	if (INV_DATE.length > 0) {
+		renderTableData('#addInventory table tbody', NEMO_PRODUCTS, 'id', 'name')  	  		
+	} else {
+		$('#addInventory table tbody').html('')
+	}
 
   fillTableData(obj.inventory, '#addInventory')
   formSet('input', 'clientid', obj.clientid, '#addInventory')
@@ -971,28 +1013,33 @@ function fillInventory(id) {
   $('#resetFormInventory').hide()
   $('#deleteInventory').show()
   $('.page.inventory .nav-header').text('Cập nhật tồn kho')
+	hideError('inventory')
 }
 function fillSellout(id) {
 
 	var obj = SELLOUT.item('clientid', id)
-	renderOptions('#addSellout select[name="outletid"]', OUTLETS, 'id', 'name', '<option value="">Chọn cửa hàng</option>', obj.outletid);
+	renderOptions('#addSellout select[name="outletid"]', OUTLETS.items('id', obj.outletid), 'id', 'name', '<option value="">Chọn cửa hàng</option>', obj.outletid);
 
 	//render DOB
   renderSingleOptions('select[name="selloutD"]',range(1,31),'<option value="">Ngày thống kê</option>', obj.cycledate.substr(0,2)*1)
   renderSingleOptions('select[name="selloutM"]',range(1,12),'<option value="">Tháng</option>', obj.cycledate.substr(2,2)*1)
   renderSingleOptions('select[name="selloutY"]',range((new Date()).getFullYear() - 1, (new Date()).getFullYear() + 1).reverse(),'<option value="">Năm</option>', obj.cycledate.substr(4,4))
 
+  //disable
+  $('#addSellout select[name="outletid"]').attr('disabled','disabled')
+  $('select[name="selloutD"]').attr('disabled','disabled')
+  $('select[name="selloutM"]').attr('disabled','disabled')
+  $('select[name="selloutY"]').attr('disabled','disabled')
+
   //render data table
-  if (!$('#addSellout').hasClass('isRendering')) {
-  	renderTableData('#addSellout table tbody', NEMO_PRODUCTS.sort(compareNemo), 'id', 'name')
-  	$('#addSellout').addClass('isRendering')
-	}
+	renderTableData('#addSellout table tbody', NEMO_PRODUCTS.sort(compareNemo), 'id', 'name')
 	fillTableData(obj.sellout, '#addSellout')	
 	formSet('input', 'clientid', obj.clientid, '#addSellout')
 
 	$('#resetFormSellout').hide()
   $('#deleteSellout').show()
   $('.page.sellout .nav-header').text('Cập nhật doanh số')
+  hideError('sellout')
 }
 function syncUp() {
 	var defCus 	= $.Deferred()
@@ -1006,7 +1053,7 @@ function syncUp() {
 	$.when(defCus, defInv, defSel).then(function(){
 		hideWait()
 		if (errorMsg !== "") {
-			errorMsg += "Số dữ liệu đã tải lên: "+ countData() +"/"+countBeforeSync
+			errorMsg += "Số dữ liệu chưa tải lên: "+ countData() +"/"+countBeforeSync
 		} else {
 			errorMsg  = "Số dữ liệu đã tải lên: "+ countBeforeSync+"/"+countBeforeSync
 		}
@@ -1101,7 +1148,7 @@ function syncUp() {
     	if (flagErr == 1) {
     		errorMsg = 'Có lỗi. '
     	}
-    	localStorage.SELLOUT = JSON.stringify(SELLOUT)
+    	localStorage.sellout = JSON.stringify(SELLOUT)
 		},
 		error: function(xhr, status, error) {
 			++countToDetectLostInternet			
@@ -1155,7 +1202,7 @@ function saveSetting() {
 	var url = formGet('input', 'domain', '#setting')
 	var pattern = new RegExp(/(((http|https):\/\/))(\w+:{0,1}\w*@)?(\S+)(:[0-9]+)?(\/|\/([\w#!:.?+=&%@!\-\/]))?/);
 	if ( !pattern.test(url) ) {
-		showError('Domain ứng dụng sai định dạng.')
+		showError('Domain ứng dụng sai định dạng')
 	} else {
 		DOMAIN = url
 		localStorage.setItem('domain', DOMAIN)
