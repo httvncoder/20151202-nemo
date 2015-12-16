@@ -21,7 +21,7 @@ $(document).ready(function () {
 	jqmReadyDeferred.resolve();
 });
 
-$.when(jqmReadyDeferred).then(init);
+$.when(jqmReadyDeferred, deviceReadyDeferred).then(init);
 
 function init() {
 	FastClick.attach(document.body)	
