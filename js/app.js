@@ -21,9 +21,10 @@ $(document).ready(function () {
 	jqmReadyDeferred.resolve();
 });
 
-$.when(jqmReadyDeferred, deviceReadyDeferred).then(init);
+$.when(deviceReadyDeferred, jqmReadyDeferred).then(init);
 
 function init() {
+	overrideFuncs()
 	FastClick.attach(document.body)	
 	gotoPage('login')	
 	if (typeof localStorage.user != 'undefined') {
@@ -115,19 +116,20 @@ function init() {
 	})
 
 	$('#deleteUser').click(function(){
-		if ( !window.confirm('Bạn chắc chắn muốn xóa bản ghi này?') ) {
-			return false
-		}
-		var id = formGet('input', 'clientid')
-		var result = CUSTOMERS.removeAt('clientid', id)
-		if (result) {
-			localStorage.customers = JSON.stringify(CUSTOMERS)
-			resetForm('#addUser', false)
-			renderPageClientData()
-			gotoPage('clientdata')
-		} else {
-			showError('Không thể xóa dữ liệu này')
-		}
+		window.confirm('Bạn chắc chắn muốn xóa bản ghi này?', function(buttonIndex){
+			if (buttonIndex == 2)
+				return
+			var id = formGet('input', 'clientid')
+			var result = CUSTOMERS.removeAt('clientid', id)
+			if (result) {
+				localStorage.customers = JSON.stringify(CUSTOMERS)
+				resetForm('#addUser', false)
+				renderPageClientData()
+				gotoPage('clientdata')
+			} else {
+				showError('Không thể xóa dữ liệu này')
+			}
+		})
 		return false
 	})
 
@@ -148,19 +150,20 @@ function init() {
 		return false
 	})
 	$('#deleteInventory').click(function(){
-		if ( !window.confirm('Bạn chắc chắn muốn xóa bản ghi này?') ) {
-			return false
-		}
-		var id = formGet('input', 'clientid','#addInventory')
-		var result = INVENTORY.removeAt('clientid', id)
-		if (result) {
-			localStorage.inventory = JSON.stringify(INVENTORY)
-			resetForm('#addInventory', false)
-			renderPageClientData()
-			gotoPage('clientdata')
-		} else {
-			showError('Không thể xóa dữ liệu này')
-		}
+		window.confirm('Bạn chắc chắn muốn xóa bản ghi này?', function(buttonIndex) {
+			if (buttonIndex == 2)
+				return
+			var id = formGet('input', 'clientid','#addInventory')
+			var result = INVENTORY.removeAt('clientid', id)
+			if (result) {
+				localStorage.inventory = JSON.stringify(INVENTORY)
+				resetForm('#addInventory', false)
+				renderPageClientData()
+				gotoPage('clientdata')
+			} else {
+				showError('Không thể xóa dữ liệu này')
+			}
+		})
 		return false
 	})
 	$('#addInventory select[name="outletid"], select[name="inv_date"]').change(function(){
@@ -187,19 +190,20 @@ function init() {
 		return false
 	})
 	$('#deleteSellout').click(function(){
-		if ( !window.confirm('Bạn chắc chắn muốn xóa bản ghi này?') ) {
-			return false
-		}
-		var id = formGet('input', 'clientid','#addSellout')
-		var result = SELLOUT.removeAt('clientid', id)
-		if (result) {
-			localStorage.sellout = JSON.stringify(SELLOUT)
-			resetForm('#addInventory', false)
-			renderPageClientData()
-			gotoPage('clientdata')
-		} else {
-			showError('Không thể xóa dữ liệu này')
-		}
+		window.confirm('Bạn chắc chắn muốn xóa bản ghi này?', function(buttonIndex) {
+			if (buttonIndex == 2) 
+				return
+			var id = formGet('input', 'clientid','#addSellout')
+			var result = SELLOUT.removeAt('clientid', id)
+			if (result) {
+				localStorage.sellout = JSON.stringify(SELLOUT)
+				resetForm('#addInventory', false)
+				renderPageClientData()
+				gotoPage('clientdata')
+			} else {
+				showError('Không thể xóa dữ liệu này')
+			}
+		})
 		return false
 	})
 	$('#addSellout select[name="outletid"], select[name="selloutD"], select[name="selloutM"], select[name="selloutY"]').change(function(){
@@ -1227,5 +1231,38 @@ function saveSetting() {
 		localStorage.setItem('domain', DOMAIN)
 		$('.setting .alert').hide()
 		gotoPage('login')
+	}
+}
+function overrideFuncs() {
+	if (typeof navigator.notification != 'undefined') {
+		window.alert = function(msg, callback) {
+			if (typeof callback == 'undefined') 
+				callback = function(){}
+			navigator.notification.alert(msg, callback, 'NEMO')
+		}
+
+		window.confirm = function(msg, callback) {
+			if (typeof callback == 'undefined') 
+				callback = function(){}
+			navigator.notification.confirm(msg, callback, 'NEMO')
+		}
+	} else {
+		var originAlert = window.alert
+		window.alert = function(msg, callback) {
+			if (typeof callback == 'undefined') 
+				callback = function(){}
+			originAlert(msg)
+			callback()
+		}
+		var originConfirm = window.confirm
+		window.confirm = function(msg, callback) {
+			if (typeof callback == 'undefined') 
+				callback = function(){}
+			var check = originConfirm(msg)
+			if (check)
+				callback(1) //press ok
+			else 
+				callback(2) //press cancle
+		}
 	}
 }
