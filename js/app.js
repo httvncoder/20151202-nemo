@@ -21,7 +21,7 @@ $(document).ready(function () {
 	jqmReadyDeferred.resolve();
 });
 
-$.when(jqmReadyDeferred, deviceReadyDeferred).then(init);
+$.when(jqmReadyDeferred).then(init);
 
 function init() {
 	FastClick.attach(document.body)	
@@ -300,11 +300,9 @@ function doLogin() {
 				showError(ERROR_CODE[obj.responsecode])
 		},
 		error: function(xhr, status, error) {
-			console.log(status)
-			if(checkOnline()) {
-				showError("Không thể kết nối tới máy chủ")
-				hideWait()				
-			}
+			console.log(status)			
+			showError("Không thể kết nối tới máy chủ")
+			hideWait()
 		},
 		complete: function() {
 			hideWait()
@@ -397,11 +395,8 @@ function renderPageInventory() {
 	$('#addInventory select[name="inv_date"]').removeAttr('disabled')
 
 	//render data table
-	if (INV_DATE.length > 0) {
-		renderTableData('#addInventory table tbody', NEMO_PRODUCTS.sort(compareNemo), 'id', 'name')  	  		
-	} else {
-		$('#addInventory table tbody').html('')
-	}
+	renderTableData('#addInventory table tbody', NEMO_PRODUCTS.sort(compareNemo), 'id', 'name')  	  		
+	
 	resetForm('#addInventory', false)
 	$('#resetFormInventory').show()
 	$('#deleteInventory').hide()
@@ -529,7 +524,7 @@ function syncDown() {
 		// Đếm số lượng defferred, đủ 6 cái ajax đều error thì chắc là mất kết nối rồi
 		if (countToDetectLostInternet == 6) {
 			countToDetectLostInternet = 0
-			$("#statusText").html("Không có kết nối Internet")	
+			$("#statusText").html("Không thể kết nối tới máy chủ")	
 		}
 	})
 	$.ajax({
@@ -1004,11 +999,7 @@ function fillInventory(id) {
 	$('#addInventory select[name="inv_date"]').attr('disabled','disabled')
 
 	//render data table
-	if (INV_DATE.length > 0) {
-		renderTableData('#addInventory table tbody', NEMO_PRODUCTS, 'id', 'name')  	  		
-	} else {
-		$('#addInventory table tbody').html('')
-	}
+	renderTableData('#addInventory table tbody', NEMO_PRODUCTS, 'id', 'name')  	  		
 
 	fillTableData(obj.inventory, '#addInventory')
 	formSet('input', 'clientid', obj.clientid, '#addInventory')
@@ -1024,7 +1015,7 @@ function fillSellout(id) {
 	renderOptions('#addSellout select[name="outletid"]', OUTLETS.items('id', obj.outletid), 'id', 'name', '<option value="">Chọn cửa hàng</option>', obj.outletid);
 
 	//render DOB
-	renderSingleOptions('select[name="selloutD"]',range(1,31),'<option value="">Ngày thống kê</option>', obj.cycledate.substr(0,2)*1)
+	renderSingleOptions('select[name="selloutD"]',range(1,31),'<option value="">Ngày</option>', obj.cycledate.substr(0,2)*1)
 	renderSingleOptions('select[name="selloutM"]',range(1,12),'<option value="">Tháng</option>', obj.cycledate.substr(2,2)*1)
 	renderSingleOptions('select[name="selloutY"]',range((new Date()).getFullYear() - 1, (new Date()).getFullYear() + 1).reverse(),'<option value="">Năm</option>', obj.cycledate.substr(4,4))
 
@@ -1062,7 +1053,7 @@ function syncUp() {
 		}
 		$("#statusText").text(errorMsg)
 		if (countToDetectLostInternet == 3) {			
-			$("#statusText").text("Không có kết nối Internet")
+			$("#statusText").text("Không thể kết nối tới máy chủ")
 		}
 	})
 	$.ajax({
@@ -1072,6 +1063,13 @@ function syncUp() {
 		processData: false,
 		contentType: 'application/json',
 		crossDomain:true,
+		beforeSend : function(xhr, opts){
+        var check = USER.funcs.find(function(e){return e == this},'CAPTRNEWUSER')
+        if (typeof check == 'undefined') {
+            xhr.abort()
+            defSel.resolve()
+        }
+    },
 		success: function(data, status, xhr) {
 			var obj = JSON.parse(data)
 			RESPONSE = obj.newuserresponse
@@ -1090,6 +1088,7 @@ function syncUp() {
 			localStorage.customers = JSON.stringify(CUSTOMERS)
 		},
 		error: function(xhr, status, error) {
+			errorMsg = 'Có lỗi. '
 			++countToDetectLostInternet
 			console.log(status)
 		}, 
@@ -1103,7 +1102,14 @@ function syncUp() {
 		method: 'POST',
 		processData: false,
 		contentType: 'application/json',
-		crossDomain:true,
+		crossDomain:true,		
+		beforeSend : function(xhr, opts){
+        var check = USER.funcs.find(function(e){return e == this},'CAPTRINVENTORY')
+        if (typeof check == 'undefined') {
+            xhr.abort()
+            defSel.resolve()
+        }
+    },
 		success: function(data, status, xhr) {
 			var obj = JSON.parse(data)
 			RESPONSE = obj.inventoryresponse
@@ -1122,6 +1128,7 @@ function syncUp() {
 			localStorage.inventory = JSON.stringify(INVENTORY)
 		},
 		error: function(xhr, status, error) {
+			errorMsg = 'Có lỗi. '
 			++countToDetectLostInternet
 			console.log(status)
 		}, 
@@ -1136,6 +1143,13 @@ function syncUp() {
 		processData: false,
 		contentType: 'application/json',
 		crossDomain:true,
+		beforeSend : function(xhr, opts){
+        var check = USER.funcs.find(function(e){return e == this},'CAPTRPGSELLOUT')
+        if (typeof check == 'undefined') {
+            xhr.abort()
+            defSel.resolve()
+        }
+    },
 		success: function(data, status, xhr) {
 			var obj = JSON.parse(data)
 			RESPONSE = obj.selloutresponse
@@ -1154,6 +1168,7 @@ function syncUp() {
 			localStorage.sellout = JSON.stringify(SELLOUT)
 		},
 		error: function(xhr, status, error) {
+			errorMsg = 'Có lỗi. '
 			++countToDetectLostInternet			
 			console.log(status)
 		}, 
@@ -1183,7 +1198,7 @@ function checkAuthentication(callback) {
 			}
 		},
 		error: function(xhr, status, error) {
-			$('#statusText').text('Không có kết nối Internet')
+			$('#statusText').text('Không thể kết nối tới máy chủ')
 			console.log(status)
 		}
 	});	
@@ -1213,15 +1228,4 @@ function saveSetting() {
 		$('.setting .alert').hide()
 		gotoPage('login')
 	}
-}
-function checkOnline() {
-	if (typeof navigator.network == 'undefined')
-		return true
-	navigator.network.isReachable("www.google.com",	function(reachability) {
-		if ( reachability.remoteHostStatus == NetworkStatus.NOT_REACHABLE ) {
-			$("#statusText").text("Không có kết nối Internet")
-			showError("Không có kết nối Internet")
-			hideWait()
-		}
-	}, {isIpAddress:false});
 }

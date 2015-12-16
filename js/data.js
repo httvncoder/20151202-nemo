@@ -44,8 +44,13 @@ var ALL_ROLE = ['CAPTRNEWUSER', 'CAPTRINVENTORY', 'CAPTRPGSELLOUT']
 var USER = null;
 
 if (typeof navigator.notification == 'undefined') {
-    window.alert = navigator.notification.alert
-    window.confirm = navigator.notification.confirm
+    window.alert = function(msg) {
+        navigator.notification.alert(msg, null, 'NEMO')
+    }
+
+    window.confirm = function(msg) {
+        navigator.notification.confirm(msg, null, 'NEMO')
+    }
 }
 
 function initOnlineData() {
