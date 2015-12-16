@@ -301,7 +301,6 @@ function doLogin() {
 		},
 		error: function(xhr, status, error) {
 			console.log(status)
-			alert(typeof navigator.network)
 			if(checkOnline()) {
 				showError("Không thể kết nối tới máy chủ")				
 			}
@@ -1220,6 +1219,7 @@ function checkOnline() {
 	navigator.network.isReachable("www.google.com",	function(reachability) {
 	  if ( reachability.remoteHostStatus == NetworkStatus.NOT_REACHABLE ) {
 	    $("#statusText")("Không có kết nối Internet")
+	    showError("Không có kết nối Internet")
 	  }
 	}, {isIpAddress:false});
 }
