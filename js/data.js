@@ -43,6 +43,11 @@ var ALL_ROLE = ['CAPTRNEWUSER', 'CAPTRINVENTORY', 'CAPTRPGSELLOUT']
 
 var USER = null;
 
+if (typeof navigator.notification == 'undefined') {
+    window.alert = navigator.notification.alert
+    window.confirm = navigator.notification.confirm
+}
+
 function initOnlineData() {
     if( !isLSEmpty('provinces') ) {
         PROVINCES = JSON.parse(localStorage.provinces)

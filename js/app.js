@@ -13,12 +13,12 @@ var jqmReadyDeferred = $.Deferred();
 
 $(document).on("deviceready", function() {
 	console.log('Ready 1')
-  deviceReadyDeferred.resolve();
+	deviceReadyDeferred.resolve();
 });
 
 $(document).ready(function () {
 	console.log('Ready 2')
-  jqmReadyDeferred.resolve();
+	jqmReadyDeferred.resolve();
 });
 
 $.when(jqmReadyDeferred, deviceReadyDeferred).then(init);
@@ -92,10 +92,10 @@ function init() {
 
 	//Page add customer
 	$('select[name="provinceid"]').change(function(){
-  	var selected = PROVINCES.filter(function(item){return item.prov == this}, $(this).val());
-  	selected.sortOn('dist')
-  	renderOptions('select[name="districtid"]', selected, 'dist', 'dist', '<option value="">Chọn quận huyện</option>');
-  });
+		var selected = PROVINCES.filter(function(item){return item.prov == this}, $(this).val());
+		selected.sortOn('dist')
+		renderOptions('select[name="districtid"]', selected, 'dist', 'dist', '<option value="">Chọn quận huyện</option>');
+	});
 	$('#resetFormUser').click(function(){
 		resetForm('#addUser')
 		return false
@@ -274,35 +274,36 @@ function doLogin() {
 	}
 	showWait()
 	$.ajax({
-    url: DOMAIN+'/LoginValidationController',
-    data: JSON.stringify({
+		url: DOMAIN+'/LoginValidationController',
+		data: JSON.stringify({
 			userid: username,
 			password: password
 		}),
-    method: 'POST',
-    processData: false,
-    contentType: 'application/json',
-    crossDomain:true,
-    success: function(data, status, xhr) {
-    	var obj = JSON.parse(data)
-    	if (obj.responsecode == '001'){
-    		USER = obj
-    		USER.userid = $('#username').val()
-    		USER.password = $('#password').val()
-    		localStorage.setItem('user', JSON.stringify(USER)) 
+		method: 'POST',
+		processData: false,
+		contentType: 'application/json',
+		crossDomain:true,
+		success: function(data, status, xhr) {
+			var obj = JSON.parse(data)
+			if (obj.responsecode == '001'){
+				USER = obj
+				USER.userid = $('#username').val()
+				USER.password = $('#password').val()
+				localStorage.setItem('user', JSON.stringify(USER)) 
 				syncDown()	
 				updateFeature()
 				gotoPage('home')	
 				$('div.username').text(USER.name)
 				$('.page.login .alert').hide()
-    	}
+			}
 			else 
 				showError(ERROR_CODE[obj.responsecode])
 		},
 		error: function(xhr, status, error) {
 			console.log(status)
 			if(checkOnline()) {
-				showError("Không thể kết nối tới máy chủ")				
+				showError("Không thể kết nối tới máy chủ")
+				hideWait()				
 			}
 		},
 		complete: function() {
@@ -363,20 +364,20 @@ function renderPageCustomer() {
 	
 	//render tinh thanh pho
 	var tmp = uniqBy(PROVINCES, function(item) {return item.prov})	
-  renderOptions('select[name="provinceid"]',tmp, 'prov', 'prov', '<option value="">Chọn tỉnh thành</option>' );
+	renderOptions('select[name="provinceid"]',tmp, 'prov', 'prov', '<option value="">Chọn tỉnh thành</option>' );
 
-  //render quan huyen
-  //handle 1 lần sự thay đổi tỉnh thì đổi quận trong document ready
+	//render quan huyen
+	//handle 1 lần sự thay đổi tỉnh thì đổi quận trong document ready
 
-  //render DOB
-  renderSingleOptions('select[name="DOB_D"]',range(1,31),'<option value="">Ngày</option>')
-  renderSingleOptions('select[name="DOB_M"]',range(1,12),'<option value="">Tháng</option>')
-  renderSingleOptions('select[name="DOB_Y"]',range((new Date()).getFullYear() - 85, (new Date()).getFullYear() + 1).reverse(),'<option value="">Năm</option>')
+	//render DOB
+	renderSingleOptions('select[name="DOB_D"]',range(1,31),'<option value="">Ngày</option>')
+	renderSingleOptions('select[name="DOB_M"]',range(1,12),'<option value="">Tháng</option>')
+	renderSingleOptions('select[name="DOB_Y"]',range((new Date()).getFullYear() - 85, (new Date()).getFullYear() + 1).reverse(),'<option value="">Năm</option>')
 
-  var comPowderMilk = COMPETITOR_PRODUCTS.filter(function(obj){return obj.type == 'P'})
-  var comLiquidMilk = COMPETITOR_PRODUCTS.filter(function(obj){return obj.type == 'L'})
-  var abbPowderMilk = ABBOTT_PRODUCTS.filter(function(obj){return obj.type == 'P'})
-  var abbLiquidMilk = ABBOTT_PRODUCTS.filter(function(obj){return obj.type == 'L'})
+	var comPowderMilk = COMPETITOR_PRODUCTS.filter(function(obj){return obj.type == 'P'})
+	var comLiquidMilk = COMPETITOR_PRODUCTS.filter(function(obj){return obj.type == 'L'})
+	var abbPowderMilk = ABBOTT_PRODUCTS.filter(function(obj){return obj.type == 'P'})
+	var abbLiquidMilk = ABBOTT_PRODUCTS.filter(function(obj){return obj.type == 'L'})
 	renderOptions('select[name="compowderproduct"]', comPowderMilk, 'id', 'name', '<option value="">Chọn sữa bột</option>');
 	renderOptions('select[name="comliquidproduct"]', comLiquidMilk, 'id', 'name', '<option value="">Chọn sữa nước</option>');
 	renderOptions('select[name="abbpowderproduct"]', abbPowderMilk, 'id', 'name', '<option value="">Chọn sữa bột</option>');
@@ -384,50 +385,50 @@ function renderPageCustomer() {
 
 	$('#resetFormUser').show()
 	$('#deleteUser').hide()
-  $('.page.customer .nav-header').text('Thêm khách hàng')	
-  hideError('customer')	
+	$('.page.customer .nav-header').text('Thêm khách hàng')	
+	hideError('customer')	
 }
 function renderPageInventory() {
 	$('.page.inventory .alert').hide()
 	renderOptions('#addInventory select[name="outletid"]', OUTLETS, 'id', 'name', '<option value="">Chọn cửa hàng</option>');	
-  renderOptions('select[name="inv_date"]',INV_DATE, 'cycledate','desc','<option value="">Ngày thống kê</option>')  
+	renderOptions('select[name="inv_date"]',INV_DATE, 'cycledate','desc','<option value="">Ngày thống kê</option>')  
 
-  $('#addInventory select[name="outletid"]').removeAttr('disabled')
+	$('#addInventory select[name="outletid"]').removeAttr('disabled')
 	$('#addInventory select[name="inv_date"]').removeAttr('disabled')
 
-  //render data table
+	//render data table
 	if (INV_DATE.length > 0) {
 		renderTableData('#addInventory table tbody', NEMO_PRODUCTS.sort(compareNemo), 'id', 'name')  	  		
 	} else {
 		$('#addInventory table tbody').html('')
 	}
-  resetForm('#addInventory', false)
-  $('#resetFormInventory').show()
-  $('#deleteInventory').hide()
-  $('.page.inventory .nav-header').text('Thống kê tồn kho')
-  hideError('inventory')
+	resetForm('#addInventory', false)
+	$('#resetFormInventory').show()
+	$('#deleteInventory').hide()
+	$('.page.inventory .nav-header').text('Thống kê tồn kho')
+	hideError('inventory')
 }
 
 function renderPageSellout() {
 	renderOptions('#addSellout select[name="outletid"]', OUTLETS, 'id', 'name', '<option value="">Chọn cửa hàng</option>');
 	//render DOB
-  renderSingleOptions('select[name="selloutD"]',range(1,31),'<option value="">Ngày</option>')
-  renderSingleOptions('select[name="selloutM"]',range(1,12),'<option value="">Tháng</option>')
-  renderSingleOptions('select[name="selloutY"]',range((new Date()).getFullYear() - 1, (new Date()).getFullYear() + 1).reverse(),'<option value="">Năm</option>')
+	renderSingleOptions('select[name="selloutD"]',range(1,31),'<option value="">Ngày</option>')
+	renderSingleOptions('select[name="selloutM"]',range(1,12),'<option value="">Tháng</option>')
+	renderSingleOptions('select[name="selloutY"]',range((new Date()).getFullYear() - 1, (new Date()).getFullYear() + 1).reverse(),'<option value="">Năm</option>')
 
-  $('#addSellout select[name="outletid"]').removeAttr('disabled')
-  $('select[name="selloutD"]').removeAttr('disabled')
-  $('select[name="selloutM"]').removeAttr('disabled')
-  $('select[name="selloutY"]').removeAttr('disabled')
+	$('#addSellout select[name="outletid"]').removeAttr('disabled')
+	$('select[name="selloutD"]').removeAttr('disabled')
+	$('select[name="selloutM"]').removeAttr('disabled')
+	$('select[name="selloutY"]').removeAttr('disabled')
 
-  //render data table
+	//render data table
 	renderTableData('#addSellout table tbody', NEMO_PRODUCTS.sort(compareNemo), 'id', 'name')
 
 	resetForm('#addSellout', false)
 	$('#resetFormSellout').show()
-  $('#deleteSellout').hide()
-  $('.page.sellout .nav-header').text('Thống kê doanh số')
-  hideError('sellout')
+	$('#deleteSellout').hide()
+	$('.page.sellout .nav-header').text('Thống kê doanh số')
+	hideError('sellout')
 
 }
 function renderPageClientData() {
@@ -532,128 +533,128 @@ function syncDown() {
 		}
 	})
 	$.ajax({
-    url: DOMAIN+'/SyncDownProvinceController',
-    data: "",
-    method: 'POST',
-    processData: false,
-    contentType: 'application/json',
-    crossDomain:true,
-    success: function(data, status, xhr) {
-    	var obj = JSON.parse(data)
-    	PROVINCES = obj.province
-    	PROVINCES.sortOn('prov')
-    	localStorage.provinces = JSON.stringify(PROVINCES)
+		url: DOMAIN+'/SyncDownProvinceController',
+		data: "",
+		method: 'POST',
+		processData: false,
+		contentType: 'application/json',
+		crossDomain:true,
+		success: function(data, status, xhr) {
+			var obj = JSON.parse(data)
+			PROVINCES = obj.province
+			PROVINCES.sortOn('prov')
+			localStorage.provinces = JSON.stringify(PROVINCES)
 		},
 		error: function(xhr, status, error) {
 			++countToDetectLostInternet
 			console.log(status)
 		},
 		complete: function(){
-    	defProvince.resolve()
+			defProvince.resolve()
 		}
 	});	
 	$.ajax({
-    url: DOMAIN+'/SyncDownPGOutletController',
-    data: '{"userid":"'+USER.userid+'"}',
-    method: 'POST',
-    processData: false,
-    contentType: 'application/json',
-    crossDomain:true,
-    success: function(data, status, xhr) {
-    	var obj = JSON.parse(data)
-    	OUTLETS = obj.pgoutlet
-    	OUTLETS.sortOn('name')
-    	localStorage.outlets = JSON.stringify(OUTLETS)
+		url: DOMAIN+'/SyncDownPGOutletController',
+		data: '{"userid":"'+USER.userid+'"}',
+		method: 'POST',
+		processData: false,
+		contentType: 'application/json',
+		crossDomain:true,
+		success: function(data, status, xhr) {
+			var obj = JSON.parse(data)
+			OUTLETS = obj.pgoutlet
+			OUTLETS.sortOn('name')
+			localStorage.outlets = JSON.stringify(OUTLETS)
 		},
 		error: function(xhr, status, error) {
 			++countToDetectLostInternet
 			console.log(status)
 		},
 		complete: function(){
-    	defOutlet.resolve()
+			defOutlet.resolve()
 		}
 	});		
 	$.ajax({
-    url: DOMAIN+'/SyncDownCompetitorProductController',
-    data: '',
-    method: 'POST',
-    processData: false,
-    contentType: 'application/json',
-    crossDomain:true,
-    success: function(data, status, xhr) {
-    	var obj = JSON.parse(data)
-    	COMPETITOR_PRODUCTS = obj.competitorproduct
-    	COMPETITOR_PRODUCTS.sortOn('name')
-    	localStorage.competitor_products = JSON.stringify(COMPETITOR_PRODUCTS)
+		url: DOMAIN+'/SyncDownCompetitorProductController',
+		data: '',
+		method: 'POST',
+		processData: false,
+		contentType: 'application/json',
+		crossDomain:true,
+		success: function(data, status, xhr) {
+			var obj = JSON.parse(data)
+			COMPETITOR_PRODUCTS = obj.competitorproduct
+			COMPETITOR_PRODUCTS.sortOn('name')
+			localStorage.competitor_products = JSON.stringify(COMPETITOR_PRODUCTS)
 		},
 		error: function(xhr, status, error) {
 			++countToDetectLostInternet
 			console.log(status)
 		},
 		complete: function(){
-    	defCompetitor.resolve()
+			defCompetitor.resolve()
 		}
 	});			
 	$.ajax({
-    url: DOMAIN+'/SyncDownAbbottProductController',
-    data: '',
-    method: 'POST',
-    processData: false,
-    contentType: 'application/json',
-    crossDomain:true,
-    success: function(data, status, xhr) {
-    	var obj = JSON.parse(data)
-    	ABBOTT_PRODUCTS = obj.abbottproduct
-    	ABBOTT_PRODUCTS.sortOn('name')
-    	localStorage.abbott_products = JSON.stringify(ABBOTT_PRODUCTS)
+		url: DOMAIN+'/SyncDownAbbottProductController',
+		data: '',
+		method: 'POST',
+		processData: false,
+		contentType: 'application/json',
+		crossDomain:true,
+		success: function(data, status, xhr) {
+			var obj = JSON.parse(data)
+			ABBOTT_PRODUCTS = obj.abbottproduct
+			ABBOTT_PRODUCTS.sortOn('name')
+			localStorage.abbott_products = JSON.stringify(ABBOTT_PRODUCTS)
 		},
 		error: function(xhr, status, error) {
 			++countToDetectLostInternet
 			console.log(status)
 		}, 
 		complete: function(){
-    	defAbbott.resolve()
+			defAbbott.resolve()
 		}
 	});	
 	$.ajax({
-    url: DOMAIN+'/SyncDownNEMOProductController',
-    data: '',
-    method: 'POST',
-    processData: false,
-    contentType: 'application/json',
-    crossDomain:true,
-    success: function(data, status, xhr) {
-    	var obj = JSON.parse(data)
-    	NEMO_PRODUCTS = obj.nemoproduct
-    	NEMO_PRODUCTS.sort(compareNemo)
-    	localStorage.nemo_products = JSON.stringify(NEMO_PRODUCTS)
+		url: DOMAIN+'/SyncDownNEMOProductController',
+		data: '',
+		method: 'POST',
+		processData: false,
+		contentType: 'application/json',
+		crossDomain:true,
+		success: function(data, status, xhr) {
+			var obj = JSON.parse(data)
+			NEMO_PRODUCTS = obj.nemoproduct
+			NEMO_PRODUCTS.sort(compareNemo)
+			localStorage.nemo_products = JSON.stringify(NEMO_PRODUCTS)
 		},
 		error: function(xhr, status, error) {
 			++countToDetectLostInternet
 			console.log(status)
 		},
 		complete: function(){
-    	defNemo.resolve()
+			defNemo.resolve()
 		}
 	});	
 	$.ajax({
-    url: DOMAIN+'/SyncDownInventoryCycleController',
-    data: '',
-    method: 'POST',
-    processData: false,
-    contentType: 'application/json',
-    crossDomain:true,
-    success: function(data, status, xhr) {
-    	var obj = JSON.parse(data)
-    	INV_DATE = obj.inventorycycle
-    	localStorage.inv_date = JSON.stringify(INV_DATE)
+		url: DOMAIN+'/SyncDownInventoryCycleController',
+		data: '',
+		method: 'POST',
+		processData: false,
+		contentType: 'application/json',
+		crossDomain:true,
+		success: function(data, status, xhr) {
+			var obj = JSON.parse(data)
+			INV_DATE = obj.inventorycycle
+			localStorage.inv_date = JSON.stringify(INV_DATE)
 		},
 		error: function(xhr, status, error) {
 			++countToDetectLostInternet
 			console.log(status)
 		},
 		complete: function(){
-    	defDate.resolve()
+			defDate.resolve()
 		}
 	});	
 	
@@ -955,24 +956,24 @@ function fillFormCustomer(id) {
 
 	//render tinh thanh pho
 	var tmp = uniqBy(PROVINCES, function(item) {return item.prov})	
-  renderOptions('select[name="provinceid"]',tmp, 'prov', 'prov', '<option value="">Chọn tỉnh thành</option>', obj.province);
+	renderOptions('select[name="provinceid"]',tmp, 'prov', 'prov', '<option value="">Chọn tỉnh thành</option>', obj.province);
 
-  //render quan huyen
+	//render quan huyen
 	var province = PROVINCES.filter(function(item){return item.prov == this}, obj.province);
 	renderOptions('select[name="districtid"]', province, 'dist', 'dist', '<option value="">Chọn quận huyện</option>', obj.district);
 
 	formSet('input', 'phone', obj.phone)
 	formSet('input', 'consumerName', obj.consumername)
 
-  //render DOB
-  renderSingleOptions('select[name="DOB_D"]',range(1,31),'<option value="">Ngày</option>',obj.dob.substr(0,2)*1)
-  renderSingleOptions('select[name="DOB_M"]',range(1,12),'<option value="">Tháng</option>', obj.dob.substr(2,2)*1)
-  renderSingleOptions('select[name="DOB_Y"]',range(1930, (new Date()).getFullYear() + 1).reverse(),'<option value="">Năm sinh</option>', obj.dob.substr(4,4))
+	//render DOB
+	renderSingleOptions('select[name="DOB_D"]',range(1,31),'<option value="">Ngày</option>',obj.dob.substr(0,2)*1)
+	renderSingleOptions('select[name="DOB_M"]',range(1,12),'<option value="">Tháng</option>', obj.dob.substr(2,2)*1)
+	renderSingleOptions('select[name="DOB_Y"]',range(1930, (new Date()).getFullYear() + 1).reverse(),'<option value="">Năm sinh</option>', obj.dob.substr(4,4))
 
-  var comPowderMilk = COMPETITOR_PRODUCTS.filter(function(obj){return obj.type == 'P'})
-  var comLiquidMilk = COMPETITOR_PRODUCTS.filter(function(obj){return obj.type == 'L'})
-  var abbPowderMilk = ABBOTT_PRODUCTS.filter(function(obj){return obj.type == 'P'})
-  var abbLiquidMilk = ABBOTT_PRODUCTS.filter(function(obj){return obj.type == 'L'})
+	var comPowderMilk = COMPETITOR_PRODUCTS.filter(function(obj){return obj.type == 'P'})
+	var comLiquidMilk = COMPETITOR_PRODUCTS.filter(function(obj){return obj.type == 'L'})
+	var abbPowderMilk = ABBOTT_PRODUCTS.filter(function(obj){return obj.type == 'P'})
+	var abbLiquidMilk = ABBOTT_PRODUCTS.filter(function(obj){return obj.type == 'L'})
 	renderOptions('select[name="compowderproduct"]', comPowderMilk, 'id', 'name', '<option value="">Chọn sữa bột</option>',obj.compowderproduct);
 	renderOptions('select[name="comliquidproduct"]', comLiquidMilk, 'id', 'name', '<option value="">Chọn sữa nước</option>',obj.comliquidproduct);
 	renderOptions('select[name="abbpowderproduct"]', abbPowderMilk, 'id', 'name', '<option value="">Chọn sữa bột</option>',obj.abbpowderproduct);
@@ -982,8 +983,8 @@ function fillFormCustomer(id) {
 
 	$('#resetFormUser').hide()
 	$('#deleteUser').show()
-  $('.page.customer .nav-header').text('Cập nhật khách hàng')	
-  hideError('customer')
+	$('.page.customer .nav-header').text('Cập nhật khách hàng')	
+	hideError('customer')
 }
 
 function fillTableData(data, formSelector) {
@@ -1002,19 +1003,19 @@ function fillInventory(id) {
 	$('#addInventory select[name="outletid"]').attr('disabled','disabled')
 	$('#addInventory select[name="inv_date"]').attr('disabled','disabled')
 
-  //render data table
+	//render data table
 	if (INV_DATE.length > 0) {
 		renderTableData('#addInventory table tbody', NEMO_PRODUCTS, 'id', 'name')  	  		
 	} else {
 		$('#addInventory table tbody').html('')
 	}
 
-  fillTableData(obj.inventory, '#addInventory')
-  formSet('input', 'clientid', obj.clientid, '#addInventory')
+	fillTableData(obj.inventory, '#addInventory')
+	formSet('input', 'clientid', obj.clientid, '#addInventory')
 
-  $('#resetFormInventory').hide()
-  $('#deleteInventory').show()
-  $('.page.inventory .nav-header').text('Cập nhật tồn kho')
+	$('#resetFormInventory').hide()
+	$('#deleteInventory').show()
+	$('.page.inventory .nav-header').text('Cập nhật tồn kho')
 	hideError('inventory')
 }
 function fillSellout(id) {
@@ -1023,25 +1024,25 @@ function fillSellout(id) {
 	renderOptions('#addSellout select[name="outletid"]', OUTLETS.items('id', obj.outletid), 'id', 'name', '<option value="">Chọn cửa hàng</option>', obj.outletid);
 
 	//render DOB
-  renderSingleOptions('select[name="selloutD"]',range(1,31),'<option value="">Ngày thống kê</option>', obj.cycledate.substr(0,2)*1)
-  renderSingleOptions('select[name="selloutM"]',range(1,12),'<option value="">Tháng</option>', obj.cycledate.substr(2,2)*1)
-  renderSingleOptions('select[name="selloutY"]',range((new Date()).getFullYear() - 1, (new Date()).getFullYear() + 1).reverse(),'<option value="">Năm</option>', obj.cycledate.substr(4,4))
+	renderSingleOptions('select[name="selloutD"]',range(1,31),'<option value="">Ngày thống kê</option>', obj.cycledate.substr(0,2)*1)
+	renderSingleOptions('select[name="selloutM"]',range(1,12),'<option value="">Tháng</option>', obj.cycledate.substr(2,2)*1)
+	renderSingleOptions('select[name="selloutY"]',range((new Date()).getFullYear() - 1, (new Date()).getFullYear() + 1).reverse(),'<option value="">Năm</option>', obj.cycledate.substr(4,4))
 
-  //disable
-  $('#addSellout select[name="outletid"]').attr('disabled','disabled')
-  $('select[name="selloutD"]').attr('disabled','disabled')
-  $('select[name="selloutM"]').attr('disabled','disabled')
-  $('select[name="selloutY"]').attr('disabled','disabled')
+	//disable
+	$('#addSellout select[name="outletid"]').attr('disabled','disabled')
+	$('select[name="selloutD"]').attr('disabled','disabled')
+	$('select[name="selloutM"]').attr('disabled','disabled')
+	$('select[name="selloutY"]').attr('disabled','disabled')
 
-  //render data table
+	//render data table
 	renderTableData('#addSellout table tbody', NEMO_PRODUCTS.sort(compareNemo), 'id', 'name')
 	fillTableData(obj.sellout, '#addSellout')	
 	formSet('input', 'clientid', obj.clientid, '#addSellout')
 
 	$('#resetFormSellout').hide()
-  $('#deleteSellout').show()
-  $('.page.sellout .nav-header').text('Cập nhật doanh số')
-  hideError('sellout')
+	$('#deleteSellout').show()
+	$('.page.sellout .nav-header').text('Cập nhật doanh số')
+	hideError('sellout')
 }
 function syncUp() {
 	var defCus 	= $.Deferred()
@@ -1065,121 +1066,121 @@ function syncUp() {
 		}
 	})
 	$.ajax({
-    url: DOMAIN+'/SyncUpNewUserController',
-    data: JSON.stringify({newuserrequest:CUSTOMERS.items('usersysid', USER.sysid)}),
-    method: 'POST',
-    processData: false,
-    contentType: 'application/json',
-    crossDomain:true,
-    success: function(data, status, xhr) {
-    	var obj = JSON.parse(data)
-    	RESPONSE = obj.newuserresponse
-    	var flagErr = 0
-    	for(var i = 0; i < RESPONSE.length; i++) {
-    		if (RESPONSE[i].responsecode == "101" || RESPONSE[i].responsecode == "102") {
-    			CUSTOMERS.updateAt('clientid', RESPONSE[i].clientid, 'syncuperror', true)
-    			flagErr = 1
-    		} else {
-    			CUSTOMERS.removeAt('clientid', RESPONSE[i].clientid)
-    		}
-    	}
-    	if (flagErr == 1) {
-    		errorMsg = 'Có lỗi. '
-    	} 
-    	localStorage.customers = JSON.stringify(CUSTOMERS)
+		url: DOMAIN+'/SyncUpNewUserController',
+		data: JSON.stringify({newuserrequest:CUSTOMERS.items('usersysid', USER.sysid)}),
+		method: 'POST',
+		processData: false,
+		contentType: 'application/json',
+		crossDomain:true,
+		success: function(data, status, xhr) {
+			var obj = JSON.parse(data)
+			RESPONSE = obj.newuserresponse
+			var flagErr = 0
+			for(var i = 0; i < RESPONSE.length; i++) {
+				if (RESPONSE[i].responsecode == "101" || RESPONSE[i].responsecode == "102") {
+					CUSTOMERS.updateAt('clientid', RESPONSE[i].clientid, 'syncuperror', true)
+					flagErr = 1
+				} else {
+					CUSTOMERS.removeAt('clientid', RESPONSE[i].clientid)
+				}
+			}
+			if (flagErr == 1) {
+				errorMsg = 'Có lỗi. '
+			} 
+			localStorage.customers = JSON.stringify(CUSTOMERS)
 		},
 		error: function(xhr, status, error) {
 			++countToDetectLostInternet
 			console.log(status)
 		}, 
 		complete: function() {
-    	defCus.resolve()			
+			defCus.resolve()			
 		}
 	});
 	$.ajax({
-    url: DOMAIN+'/SyncUpInventoryController',
-    data: JSON.stringify({inventoryrequest:INVENTORY.items('usersysid', USER.sysid)}),
-    method: 'POST',
-    processData: false,
-    contentType: 'application/json',
-    crossDomain:true,
-    success: function(data, status, xhr) {
-    	var obj = JSON.parse(data)
-    	RESPONSE = obj.inventoryresponse
-    	var flagErr = 0
-    	for(var i = 0; i < RESPONSE.length; i++) {
-    		if (RESPONSE[i].responsecode == "101" || RESPONSE[i].responsecode == "102") {
-    			INVENTORY.updateAt('clientid', RESPONSE[i].clientid, 'syncuperror', true)
-    			flagErr = 1
-    		} else {
-    			INVENTORY.removeAt('clientid', RESPONSE[i].clientid)
-    		}
-    	}
-    	if (flagErr == 1) {
-    		errorMsg = 'Có lỗi. '
-    	}
-    	localStorage.inventory = JSON.stringify(INVENTORY)
+		url: DOMAIN+'/SyncUpInventoryController',
+		data: JSON.stringify({inventoryrequest:INVENTORY.items('usersysid', USER.sysid)}),
+		method: 'POST',
+		processData: false,
+		contentType: 'application/json',
+		crossDomain:true,
+		success: function(data, status, xhr) {
+			var obj = JSON.parse(data)
+			RESPONSE = obj.inventoryresponse
+			var flagErr = 0
+			for(var i = 0; i < RESPONSE.length; i++) {
+				if (RESPONSE[i].responsecode == "101" || RESPONSE[i].responsecode == "102") {
+					INVENTORY.updateAt('clientid', RESPONSE[i].clientid, 'syncuperror', true)
+					flagErr = 1
+				} else {
+					INVENTORY.removeAt('clientid', RESPONSE[i].clientid)
+				}
+			}
+			if (flagErr == 1) {
+				errorMsg = 'Có lỗi. '
+			}
+			localStorage.inventory = JSON.stringify(INVENTORY)
 		},
 		error: function(xhr, status, error) {
 			++countToDetectLostInternet
 			console.log(status)
 		}, 
 		complete: function() {
-    	defInv.resolve()
+			defInv.resolve()
 		}
 	});	
 	$.ajax({
-    url: DOMAIN+'/SyncUpSelloutController',
-    data: JSON.stringify({selloutrequest:SELLOUT.items('usersysid', USER.sysid)}),
-    method: 'POST',
-    processData: false,
-    contentType: 'application/json',
-    crossDomain:true,
-    success: function(data, status, xhr) {
-    	var obj = JSON.parse(data)
-    	RESPONSE = obj.selloutresponse
-    	var flagErr = 0
-    	for(var i = 0; i < RESPONSE.length; i++) {
-    		if (RESPONSE[i].responsecode == "101" || RESPONSE[i].responsecode == "102") {
-    			SELLOUT.updateAt('clientid', RESPONSE[i].clientid, 'syncuperror', true)
-    			flagErr = 1
-    		} else {
-    			SELLOUT.removeAt('clientid', RESPONSE[i].clientid)
-    		}
-    	}
-    	if (flagErr == 1) {
-    		errorMsg = 'Có lỗi. '
-    	}
-    	localStorage.sellout = JSON.stringify(SELLOUT)
+		url: DOMAIN+'/SyncUpSelloutController',
+		data: JSON.stringify({selloutrequest:SELLOUT.items('usersysid', USER.sysid)}),
+		method: 'POST',
+		processData: false,
+		contentType: 'application/json',
+		crossDomain:true,
+		success: function(data, status, xhr) {
+			var obj = JSON.parse(data)
+			RESPONSE = obj.selloutresponse
+			var flagErr = 0
+			for(var i = 0; i < RESPONSE.length; i++) {
+				if (RESPONSE[i].responsecode == "101" || RESPONSE[i].responsecode == "102") {
+					SELLOUT.updateAt('clientid', RESPONSE[i].clientid, 'syncuperror', true)
+					flagErr = 1
+				} else {
+					SELLOUT.removeAt('clientid', RESPONSE[i].clientid)
+				}
+			}
+			if (flagErr == 1) {
+				errorMsg = 'Có lỗi. '
+			}
+			localStorage.sellout = JSON.stringify(SELLOUT)
 		},
 		error: function(xhr, status, error) {
 			++countToDetectLostInternet			
 			console.log(status)
 		}, 
 		complete: function() {
-    	defSel.resolve()
+			defSel.resolve()
 		}
 	});	
 }
 function checkAuthentication(callback) {
 	$('#statusText').text('Đang xác nhận tài khoản...')
 	$.ajax({
-    url: DOMAIN+'/LoginValidationForSyncController',
-    data: JSON.stringify({
+		url: DOMAIN+'/LoginValidationForSyncController',
+		data: JSON.stringify({
 			userid: USER.userid,
 			password: USER.password
 		}),
-    method: 'POST',
-    processData: false,
-    contentType: 'application/json',
-    crossDomain:true,
-    success: function(data, status, xhr) {
-    	var obj = JSON.parse(data)
-    	if (obj.responsecode == '001') {
-    		callback()
-    	} else {
+		method: 'POST',
+		processData: false,
+		contentType: 'application/json',
+		crossDomain:true,
+		success: function(data, status, xhr) {
+			var obj = JSON.parse(data)
+			if (obj.responsecode == '001') {
+				callback()
+			} else {
 				$('#statusText').text('Thông tin đăng nhập đã thay đổi trên hệ thống. Vui lòng đăng xuất ứng dụng và đăng nhập lại.')
-    	}
+			}
 		},
 		error: function(xhr, status, error) {
 			$('#statusText').text('Không có kết nối Internet')
@@ -1217,9 +1218,10 @@ function checkOnline() {
 	if (typeof navigator.network == 'undefined')
 		return true
 	navigator.network.isReachable("www.google.com",	function(reachability) {
-	  if ( reachability.remoteHostStatus == NetworkStatus.NOT_REACHABLE ) {
-	    $("#statusText")("Không có kết nối Internet")
-	    showError("Không có kết nối Internet")
-	  }
+		if ( reachability.remoteHostStatus == NetworkStatus.NOT_REACHABLE ) {
+			$("#statusText").text("Không có kết nối Internet")
+			showError("Không có kết nối Internet")
+			hideWait()
+		}
 	}, {isIpAddress:false});
 }
