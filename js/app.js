@@ -301,7 +301,10 @@ function doLogin() {
 		},
 		error: function(xhr, status, error) {
 			console.log(status)
-			showError("Không thể kết nối tới máy chủ")
+			alert(typeof navigator.network)
+			if(checkOnline()) {
+				showError("Không thể kết nối tới máy chủ")				
+			}
 		},
 		complete: function() {
 			hideWait()
@@ -375,10 +378,10 @@ function renderPageCustomer() {
   var comLiquidMilk = COMPETITOR_PRODUCTS.filter(function(obj){return obj.type == 'L'})
   var abbPowderMilk = ABBOTT_PRODUCTS.filter(function(obj){return obj.type == 'P'})
   var abbLiquidMilk = ABBOTT_PRODUCTS.filter(function(obj){return obj.type == 'L'})
-	renderOptions('select[name="compowderproduct"]', [{id:'', name:'Chọn sữa bột'}].concat(comPowderMilk), 'id', 'name');
-	renderOptions('select[name="comliquidproduct"]', [{id:'', name:'Chọn sữa nước'}].concat(comLiquidMilk), 'id', 'name');
-	renderOptions('select[name="abbpowderproduct"]', [{id:'', name:'Chọn sữa bột'}].concat(abbPowderMilk), 'id', 'name');
-	renderOptions('select[name="abbliquidproduct"]', [{id:'', name:'Chọn sữa nước'}].concat(abbLiquidMilk), 'id', 'name');
+	renderOptions('select[name="compowderproduct"]', comPowderMilk, 'id', 'name', '<option value="">Chọn sữa bột</option>');
+	renderOptions('select[name="comliquidproduct"]', comLiquidMilk, 'id', 'name', '<option value="">Chọn sữa nước</option>');
+	renderOptions('select[name="abbpowderproduct"]', abbPowderMilk, 'id', 'name', '<option value="">Chọn sữa bột</option>');
+	renderOptions('select[name="abbliquidproduct"]', abbLiquidMilk, 'id', 'name', '<option value="">Chọn sữa nước</option>');
 
 	$('#resetFormUser').show()
 	$('#deleteUser').hide()
@@ -971,10 +974,10 @@ function fillFormCustomer(id) {
   var comLiquidMilk = COMPETITOR_PRODUCTS.filter(function(obj){return obj.type == 'L'})
   var abbPowderMilk = ABBOTT_PRODUCTS.filter(function(obj){return obj.type == 'P'})
   var abbLiquidMilk = ABBOTT_PRODUCTS.filter(function(obj){return obj.type == 'L'})
-	renderOptions('select[name="compowderproduct"]', comPowderMilk, 'id', 'name', '<option>Chọn sữa bột</option>',obj.compowderproduct);
-	renderOptions('select[name="comliquidproduct"]', comLiquidMilk, 'id', 'name', '<option>Chọn sữa nước</option>',obj.comliquidproduct);
-	renderOptions('select[name="abbpowderproduct"]', abbPowderMilk, 'id', 'name', '<option>Chọn sữa bột</option>',obj.abbpowderproduct);
-	renderOptions('select[name="abbliquidproduct"]', abbLiquidMilk, 'id', 'name', '<option>Chọn sữa nước</option>',obj.abbliquidproduct);
+	renderOptions('select[name="compowderproduct"]', comPowderMilk, 'id', 'name', '<option value="">Chọn sữa bột</option>',obj.compowderproduct);
+	renderOptions('select[name="comliquidproduct"]', comLiquidMilk, 'id', 'name', '<option value="">Chọn sữa nước</option>',obj.comliquidproduct);
+	renderOptions('select[name="abbpowderproduct"]', abbPowderMilk, 'id', 'name', '<option value="">Chọn sữa bột</option>',obj.abbpowderproduct);
+	renderOptions('select[name="abbliquidproduct"]', abbLiquidMilk, 'id', 'name', '<option value="">Chọn sữa nước</option>',obj.abbliquidproduct);
 
 	formSet('input', 'clientid', obj.clientid)
 
@@ -1160,6 +1163,7 @@ function syncUp() {
 	});	
 }
 function checkAuthentication(callback) {
+	$('#statusText').text('Đang xác nhận tài khoản...')
 	$.ajax({
     url: DOMAIN+'/LoginValidationForSyncController',
     data: JSON.stringify({
@@ -1209,4 +1213,13 @@ function saveSetting() {
 		$('.setting .alert').hide()
 		gotoPage('login')
 	}
+}
+function checkOnline() {
+	if (typeof navigator.network == 'undefined')
+		return true
+	navigator.network.isReachable("www.google.com",	function(reachability) {
+	  if ( reachability.remoteHostStatus == NetworkStatus.NOT_REACHABLE ) {
+	    $("#statusText")("Không có kết nối Internet")
+	  }
+	}, {isIpAddress:false});
 }
