@@ -21,7 +21,7 @@ $(document).ready(function () {
 	jqmReadyDeferred.resolve();
 });
 
-$.when(deviceReadyDeferred, jqmReadyDeferred).then(init);
+$.when(jqmReadyDeferred).then(init);
 
 function init() {
 	overrideFuncs()
@@ -1071,7 +1071,7 @@ function syncUp() {
         var check = USER.funcs.find(function(e){return e == this},'CAPTRNEWUSER')
         if (typeof check == 'undefined') {
             xhr.abort()
-            defSel.resolve()
+            defCus.resolve()
         }
     },
 		success: function(data, status, xhr) {
@@ -1111,7 +1111,7 @@ function syncUp() {
         var check = USER.funcs.find(function(e){return e == this},'CAPTRINVENTORY')
         if (typeof check == 'undefined') {
             xhr.abort()
-            defSel.resolve()
+            defInv.resolve()
         }
     },
 		success: function(data, status, xhr) {
@@ -1182,6 +1182,7 @@ function syncUp() {
 	});	
 }
 function checkAuthentication(callback) {
+	showWait()
 	$('#statusText').text('Đang xác nhận tài khoản...')
 	$.ajax({
 		url: DOMAIN+'/LoginValidationForSyncController',
@@ -1194,6 +1195,7 @@ function checkAuthentication(callback) {
 		contentType: 'application/json',
 		crossDomain:true,
 		success: function(data, status, xhr) {
+			hideWait()
 			var obj = JSON.parse(data)
 			if (obj.responsecode == '001') {
 				callback()
@@ -1202,6 +1204,7 @@ function checkAuthentication(callback) {
 			}
 		},
 		error: function(xhr, status, error) {
+			hideWait()
 			$('#statusText').text('Không thể kết nối tới máy chủ')
 			console.log(status)
 		}
