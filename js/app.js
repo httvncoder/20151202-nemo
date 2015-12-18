@@ -21,7 +21,7 @@ $(document).ready(function () {
 	jqmReadyDeferred.resolve();
 });
 
-$.when(jqmReadyDeferred, deviceReadyDeferred).then(init);
+$.when(jqmReadyDeferred).then(init);
 
 function init() {
 	overrideFuncs()
@@ -175,7 +175,7 @@ function init() {
 	})
 	// page sellout
 	$('#resetFormSellout').click(function(){
-		resetForm('#addInventory')
+		resetForm('#addSellout')
 		return false
 	})
 	$('#submitFormSellout').click(function(){
@@ -197,7 +197,7 @@ function init() {
 			var result = SELLOUT.removeAt('clientid', id)
 			if (result) {
 				localStorage.sellout = JSON.stringify(SELLOUT)
-				resetForm('#addInventory', false)
+				resetForm('#addSellout', false)
 				renderPageClientData()
 				gotoPage('clientdata')
 			} else {
@@ -495,15 +495,20 @@ function resetForm(selector, doConfirm) {
 	if (typeof doConfirm == 'undefined') {
 		doConfirm = true;
 	}
-	if (doConfirm) {
-		var isReset = confirm("Bạn có muốn xóa nội dung đã nhập để làm lại?");
-		if (isReset == false) 
-			return;		
+	var doReset = function(buttonIndex){
+		if (buttonIndex == 2)
+			return
+		$(selector).find('select').val('')
+		$(selector).find('input').val('')
+		$(selector).find('input.alert').removeClass('alert')
+		$(selector).find('.alert').hide()
+		$('html,body').scrollTop(0)			
 	}
-	$(selector).find('select').val('')
-	$(selector).find('input').val('')
-	$(selector).find('.alert').hide()
-	$('html,body').scrollTop(0)
+	if (doConfirm) {
+		window.confirm("Bạn có muốn xóa nội dung đã nhập để làm lại?",doReset)
+	} else {
+		doReset(1)
+	}
 }
 
 function syncDown() {
