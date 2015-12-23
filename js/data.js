@@ -24,7 +24,7 @@ var ABBOTT_PRODUCTS = [];
 
 var NEMO_PRODUCTS = [];
 
-var DOMAIN = "http://nemoapp.3anutrition.com:8088/NEMOApp";
+var DOMAIN = "https://nemoapp.3anutrition.com:8443";
 
 var ERROR_CODE = {
 	"001": "Validation passed",
