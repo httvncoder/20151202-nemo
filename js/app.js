@@ -229,7 +229,8 @@ function init() {
 		processData: 	false,
 		contentType: 	'application/json',
 		crossDomain: 	true,
-		dataType: "json"
+		dataType: "json",
+		timeout: 50000
 	})
 } // END INIT FUNCTION
 
