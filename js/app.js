@@ -224,6 +224,13 @@ function init() {
 		}
 		$(this).next().toggle()
 	})
+	$.ajaxSetup({
+		method: 			'POST',
+		processData: 	false,
+		contentType: 	'application/json',
+		crossDomain: 	true,
+		dataType: "json"
+	})
 } // END INIT FUNCTION
 
 function checkDuplicate(day, outletid, data) {
@@ -288,9 +295,8 @@ function doLogin() {
 		contentType: 'application/json',
 		crossDomain:true,
 		success: function(data, status, xhr) {
-			var obj = JSON.parse(data)
-			if (obj.responsecode == '001'){
-				USER = obj
+			if (data.responsecode == '001'){
+				USER = data
 				USER.userid = $('#username').val()
 				USER.password = $('#password').val()
 				localStorage.setItem('user', JSON.stringify(USER)) 
@@ -301,7 +307,7 @@ function doLogin() {
 				$('.page.login .alert').hide()
 			}
 			else 
-				showError(ERROR_CODE[obj.responsecode])
+				showError(ERROR_CODE[data.responsecode])
 		},
 		error: function(xhr, status, error) {
 			console.log(status)			
@@ -539,13 +545,8 @@ function syncDown() {
 	$.ajax({
 		url: DOMAIN+'/SyncDownProvinceController',
 		data: "",
-		method: 'POST',
-		processData: false,
-		contentType: 'application/json',
-		crossDomain:true,
 		success: function(data, status, xhr) {
-			var obj = JSON.parse(data)
-			PROVINCES = obj.province
+			PROVINCES = data.province
 			PROVINCES.sortOn('prov')
 			localStorage.provinces = JSON.stringify(PROVINCES)
 		},
@@ -560,13 +561,8 @@ function syncDown() {
 	$.ajax({
 		url: DOMAIN+'/SyncDownPGOutletController',
 		data: '{"userid":"'+USER.userid+'"}',
-		method: 'POST',
-		processData: false,
-		contentType: 'application/json',
-		crossDomain:true,
 		success: function(data, status, xhr) {
-			var obj = JSON.parse(data)
-			OUTLETS = obj.pgoutlet
+			OUTLETS = data.pgoutlet
 			OUTLETS.sortOn('name')
 			localStorage.outlets = JSON.stringify(OUTLETS)
 		},
@@ -581,13 +577,8 @@ function syncDown() {
 	$.ajax({
 		url: DOMAIN+'/SyncDownCompetitorProductController',
 		data: '',
-		method: 'POST',
-		processData: false,
-		contentType: 'application/json',
-		crossDomain:true,
 		success: function(data, status, xhr) {
-			var obj = JSON.parse(data)
-			COMPETITOR_PRODUCTS = obj.competitorproduct
+			COMPETITOR_PRODUCTS = data.competitorproduct
 			COMPETITOR_PRODUCTS.sortOn('name')
 			localStorage.competitor_products = JSON.stringify(COMPETITOR_PRODUCTS)
 		},
@@ -602,13 +593,8 @@ function syncDown() {
 	$.ajax({
 		url: DOMAIN+'/SyncDownAbbottProductController',
 		data: '',
-		method: 'POST',
-		processData: false,
-		contentType: 'application/json',
-		crossDomain:true,
 		success: function(data, status, xhr) {
-			var obj = JSON.parse(data)
-			ABBOTT_PRODUCTS = obj.abbottproduct
+			ABBOTT_PRODUCTS = data.abbottproduct
 			ABBOTT_PRODUCTS.sortOn('name')
 			localStorage.abbott_products = JSON.stringify(ABBOTT_PRODUCTS)
 		},
@@ -623,13 +609,8 @@ function syncDown() {
 	$.ajax({
 		url: DOMAIN+'/SyncDownNEMOProductController',
 		data: '',
-		method: 'POST',
-		processData: false,
-		contentType: 'application/json',
-		crossDomain:true,
 		success: function(data, status, xhr) {
-			var obj = JSON.parse(data)
-			NEMO_PRODUCTS = obj.nemoproduct
+			NEMO_PRODUCTS = data.nemoproduct
 			NEMO_PRODUCTS.sort(compareNemo)
 			localStorage.nemo_products = JSON.stringify(NEMO_PRODUCTS)
 		},
@@ -644,13 +625,8 @@ function syncDown() {
 	$.ajax({
 		url: DOMAIN+'/SyncDownInventoryCycleController',
 		data: '',
-		method: 'POST',
-		processData: false,
-		contentType: 'application/json',
-		crossDomain:true,
 		success: function(data, status, xhr) {
-			var obj = JSON.parse(data)
-			INV_DATE = obj.inventorycycle
+			INV_DATE = data.inventorycycle
 			localStorage.inv_date = JSON.stringify(INV_DATE)
 		},
 		error: function(xhr, status, error) {
@@ -1067,21 +1043,16 @@ function syncUp() {
 	})
 	$.ajax({
 		url: DOMAIN+'/SyncUpNewUserController',
-		data: JSON.stringify({newuserrequest:CUSTOMERS.items('usersysid', USER.sysid)}),
-		method: 'POST',
-		processData: false,
-		contentType: 'application/json',
-		crossDomain:true,
+		data: JSON.stringify({newuserrequest:CUSTOMERS.items('usersysid', USER.sysid)}),	
 		beforeSend : function(xhr, opts){
-        var check = USER.funcs.find(function(e){return e == this},'CAPTRNEWUSER')
-        if (typeof check == 'undefined') {
+        var check = USER.funcs.filter(function(e){return e == this},'CAPTRNEWUSER')
+        if (check.length === 0) {
             xhr.abort()
             defCus.resolve()
         }
     },
 		success: function(data, status, xhr) {
-			var obj = JSON.parse(data)
-			RESPONSE = obj.newuserresponse
+			RESPONSE = data.newuserresponse
 			var flagErr = 0
 			for(var i = 0; i < RESPONSE.length; i++) {
 				if (RESPONSE[i].responsecode == "101" || RESPONSE[i].responsecode == "102") {
@@ -1108,20 +1079,15 @@ function syncUp() {
 	$.ajax({
 		url: DOMAIN+'/SyncUpInventoryController',
 		data: JSON.stringify({inventoryrequest:INVENTORY.items('usersysid', USER.sysid)}),
-		method: 'POST',
-		processData: false,
-		contentType: 'application/json',
-		crossDomain:true,		
 		beforeSend : function(xhr, opts){
-        var check = USER.funcs.find(function(e){return e == this},'CAPTRINVENTORY')
-        if (typeof check == 'undefined') {
+        var check = USER.funcs.filter(function(e){return e == this},'CAPTRINVENTORY')
+        if (check.length === 0) {
             xhr.abort()
             defInv.resolve()
         }
     },
 		success: function(data, status, xhr) {
-			var obj = JSON.parse(data)
-			RESPONSE = obj.inventoryresponse
+			RESPONSE = data.inventoryresponse
 			var flagErr = 0
 			for(var i = 0; i < RESPONSE.length; i++) {
 				if (RESPONSE[i].responsecode == "101" || RESPONSE[i].responsecode == "102") {
@@ -1148,20 +1114,15 @@ function syncUp() {
 	$.ajax({
 		url: DOMAIN+'/SyncUpSelloutController',
 		data: JSON.stringify({selloutrequest:SELLOUT.items('usersysid', USER.sysid)}),
-		method: 'POST',
-		processData: false,
-		contentType: 'application/json',
-		crossDomain:true,
 		beforeSend : function(xhr, opts){
-        var check = USER.funcs.find(function(e){return e == this},'CAPTRPGSELLOUT')
-        if (typeof check == 'undefined') {
+        var check = USER.funcs.filter(function(e){return e == this},'CAPTRPGSELLOUT')
+        if (check.length === 0) {
             xhr.abort()
             defSel.resolve()
         }
     },
 		success: function(data, status, xhr) {
-			var obj = JSON.parse(data)
-			RESPONSE = obj.selloutresponse
+			RESPONSE = data.selloutresponse
 			var flagErr = 0
 			for(var i = 0; i < RESPONSE.length; i++) {
 				if (RESPONSE[i].responsecode == "101" || RESPONSE[i].responsecode == "102") {
@@ -1195,14 +1156,9 @@ function checkAuthentication(callback) {
 			userid: USER.userid,
 			password: USER.password
 		}),
-		method: 'POST',
-		processData: false,
-		contentType: 'application/json',
-		crossDomain:true,
 		success: function(data, status, xhr) {
 			hideWait()
-			var obj = JSON.parse(data)
-			if (obj.responsecode == '001') {
+			if (data.responsecode == '001') {
 				callback()
 			} else {
 				$('#statusText').text('Thông tin đăng nhập đã thay đổi trên hệ thống. Vui lòng đăng xuất ứng dụng và đăng nhập lại.')
