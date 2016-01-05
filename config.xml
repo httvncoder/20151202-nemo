@@ -65,7 +65,7 @@
     <icon gap:platform="wp8" src="res/wp/Background.png" width="159" height="159" />
 
     <!-- SPLASH SCREEN -->
-    <gap:splash gap:platform="android" gap:qualifier="port-ldpi" src="res/splash/nemo.480.png" />
+    <!-- <gap:splash gap:platform="android" gap:qualifier="port-ldpi" src="res/splash/nemo.480.png" />
     <gap:splash gap:platform="android" gap:qualifier="port-mdpi" src="res/splash/nemo.640.png" />
     <gap:splash gap:platform="android" gap:qualifier="port-hdpi" src="res/splash/nemo.png" />
     <gap:splash gap:platform="android" gap:qualifier="port-xhdpi" src="res/splash/nemo.png" />
@@ -74,7 +74,7 @@
     <gap:splash gap:platform="ios" height="1136" src="res/splash/nemo.640.png" width="640" />
     <gap:splash gap:platform="ios" height="1024" src="res/splash/nemo.768.png" width="768" />
     <gap:splash gap:platform="ios" height="768" src="res/splash/nemo.768.png" width="1024" />
-    <gap:splash gap:platform="winphone" src="res/splash/nemo.png" />
+    <gap:splash gap:platform="winphone" src="res/splash/nemo.png" /> -->
 
     <access origin="*" />
     <plugin name="cordova-plugin-whitelist" version="1" />
